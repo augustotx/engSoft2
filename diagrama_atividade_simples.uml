@@ -1,0 +1,30 @@
+@startuml
+title Waveform (Sistema de Distribuição de Áudio)
+
+start
+:Usuário faz cadastro/login;
+
+if (Usuário requisita áudio) then (Sim)
+  :Sistema distribui áudio;
+(Não    ) elseif (Usuário edita/cria/remove playlist) then (Sim)
+  :Sistema completa operação;
+(Não    ) elseif (Usuário assina ou renova assinatura) then (Sim)
+  :Sistema conecta com API de pagamento;
+  if (Pagamento bem-sucedido) then (Sim)
+    :Sistema libera benefícios;
+  else (Não)
+    :Sistema NÃO libera benefícios;
+  endif
+(Não    )  elseif (Usuário compra álbum/áudio avulso) then (Sim)
+  :Sistema conecta com API de pagamento;
+  if (Pagamento bem-sucedido) then (Sim)
+    :Sistema libera produto para download;
+  else (Não)
+    :Sistema NÃO libera download do produto;
+  endif
+else (Não)
+  :Nenhuma ação selecionada;
+endif
+
+stop
+@enduml
