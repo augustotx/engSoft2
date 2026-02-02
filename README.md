@@ -11,3 +11,6 @@ Projeto de Tóp. Avançados de Engenharia de Software do 7º Semestre (FEI)
 ![Diagrama de Atividades Simplificado](./assets/diagrama_atividade_simples.png)
 
 Documento inicial dentro do repositório: [link](./definicao.docx)
+
+## Framework escolhido - VueJS
+VueJS foi escolhido por ser simples de entender e utilizar linguagens _web_ tradicionais (HTML, CSS, JavaScript), com a adição de TypeScript opcional podendo facilitar o desenvolvimento a depender das necessidades dos desenvolvedores.
