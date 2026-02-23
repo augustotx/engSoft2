@@ -1,0 +1,15 @@
+@startuml
+left to right direction
+
+"Usuário" as User
+:User: --> (Faz Cadastro/Login)
+:User: --> (Gerencia suas Playlists)
+:User: --> (Renova/Assina assinatura)
+:User: --> (Faz download de áudio)
+:User: --> (Ouve áudio)
+
+:Uploader: --> (Faz upload de arquivo de áudio)
+:Uploader: --> (Preenche formulário de cadastro)
+
+:Admin: --> (Valida formulário de cadastro)
+@enduml

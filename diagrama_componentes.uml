@@ -1,0 +1,10 @@
+@startuml
+
+left to right direction
+
+UsuarioService - [Componente Usuário]
+UploaderService - [Componente Uploader]
+AudioService - [Componente Áudio]
+
+@enduml
+
