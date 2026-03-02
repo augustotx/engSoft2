@@ -1,10 +1,13 @@
 @startuml
-
 left to right direction
 
-UsuarioService - [Componente Usuário]
-UploaderService - [Componente Uploader]
-AudioService - [Componente Áudio]
-
+AudioPlaybackService - [Componente Áudio]
+AudioUploadService - [Componente Áudio]
+AudioCatalogoService - [Componente Áudio]
+AudioValidarService - [Componente Áudio]
+AudioPlaybackService ..> [Componente Usuário]
+AudioValidarService ..> [Componente Uploader] 
+AudioUploadService ..> [Componente Uploader]
+AudioCatalogoService ..> [Componente Usuário] : "buscarAudio()"
+AudioCatalogoService ..> [Componente Usuário] : "listarAudioUploader()"
 @enduml
-
