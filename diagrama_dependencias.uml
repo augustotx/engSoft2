@@ -1,13 +1,4 @@
 @startuml
-
-top to bottom direction
-
-UsuarioService - [Componente Usuário]
-UploaderService - [Componente Uploader]
-AudioService - [Componente Áudio]
-[Componente Áudio] ..> UsuarioService
-[Componente Áudio] ..> UploaderService
-[Componente Usuário] ..> AudioService
-[Componente Uploader] ..> AudioService
+left to right direction
+[Componente Usuário] ..> [Componente Áudio] : "requer"
 @enduml
-
