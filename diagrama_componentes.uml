@@ -5,9 +5,10 @@ AudioPlaybackService - [Componente Áudio]
 AudioUploadService - [Componente Áudio]
 AudioCatalogoService - [Componente Áudio]
 AudioValidarService - [Componente Áudio]
-AudioPlaybackService ..> [Componente Usuário]
-AudioValidarService ..> [Componente Uploader] 
-AudioUploadService ..> [Componente Uploader]
+AudioPlaybackService ..> [Componente Usuário]: "tocarAudio()"
+AudioValidarService ..> [Componente Uploader]: "validarFormato()"
+AudioUploadService ..> [Componente Uploader]: "fazerUpload()"
 AudioCatalogoService ..> [Componente Usuário] : "buscarAudio()"
-AudioCatalogoService ..> [Componente Usuário] : "listarAudioUploader()"
+AudioCatalogoService ..> [Componente Usuário] : "listarAudiosUploader()"
+AudioCatalogoService ..> [Componente Usuário] : "listarAudiosUser()"
 @enduml
