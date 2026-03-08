@@ -12,16 +12,18 @@ Certifique-se de ter instalado:
 
 ### Passos para clonar, instalar e rodar
 1. Clonar o repositório:
-git clone https://github.com/augustotx/engSoft2.git
+git clone https://github.com/augustotx/engSoft2.git 
+
+2. Mudar para o diretório correto:
 cd implementação/Waveform
 
-2. Instalar dependências:
+3. Instalar dependências:
 npm install
 
-3. Rodar o servidor de desenvolvimento:
+4. Rodar o servidor de desenvolvimento:
 npm run dev
 
-4. Abrir no navegador a URL informada pelo Vite (ex.: http://localhost:5173/)
+5. Abrir no navegador a URL informada pelo Vite (ex.: http://localhost:5173/)
 
 ---
 
