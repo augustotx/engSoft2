@@ -14,3 +14,7 @@ Documento inicial dentro do repositório: [link](./doc/definicao_do_projeto.docx
 
 ## Framework escolhido - VueJS
 VueJS foi escolhido por ser simples de entender e utilizar linguagens _web_ tradicionais (HTML, CSS, JavaScript), com a adição de TypeScript opcional podendo facilitar o desenvolvimento a depender das necessidades dos desenvolvedores.
+
+## Implementação
+
+Implementações se encontram na pasta `implementações` nesse repositório. As implementações contêm READMEs para testar e rodar o código.
