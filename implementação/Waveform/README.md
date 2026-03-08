@@ -1,38 +1,105 @@
 # Waveform
 
-This template should help get you started developing with Vue 3 in Vite.
+## 1️⃣ Como usar e testar a implementação
 
-## Recommended IDE Setup
+### Requisitos
+Certifique-se de ter instalado:
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Node.js (versão 18+)
+- npm (ou yarn)
+- Vue 3
+- Bootstrap 5
 
-## Recommended Browser Setup
+### Passos para clonar, instalar e rodar
+1. Clonar o repositório:
+git clone <URL_DO_REPO>
+cd Waveform
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+2. Instalar dependências:
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+3. Rodar o servidor de desenvolvimento:
 npm run dev
-```
 
-### Compile and Minify for Production
+4. Abrir no navegador a URL informada pelo Vite (ex.: http://localhost:5173/)
 
-```sh
-npm run build
-```
+### Onde colocar os arquivos de áudio
+Os arquivos de áudio devem ficar em:
+public/audios/
+  Schism.mp3
+  The_Pot.mp3
+  petitjornal300.mp3
+  petitjornal254.mp3
+  brascubas_cap1.mp3
+  metamorfose_cap1.mp3
+
+---
+
+## 2️⃣ Implementação — componentes e interfaces
+
+### Visão geral
+O objetivo da atividade foi implementar pelo menos dois componentes e demonstrar que a comunicação entre eles ocorre exclusivamente por meio de interfaces.  
+
+- Componentes: Componente Áudio e Componente Usuário
+- Interfaces: AudioPlaybackService e AudioCatalogService
+
+### Componentes
+
+#### Componente Áudio
+- Responsável por gerenciar a reprodução de áudios (play/pause, lista, destaque)
+- Fornece a interface AudioPlaybackService
+
+#### Componente Usuário
+- Responsável por interagir com os áudios (clicar play/pause, ver nome destacado)
+- Consome AudioPlaybackService para tocar/pausar
+- Fornece AudioCatalogService para fornecer dados ao Componente Áudio
+
+### Interfaces
+
+#### AudioPlaybackService
+- play(audioId: number): void
+- pause(audioId: number): void
+- toggle(audioId: number): void
+- getCurrent(): { id: number|null }
+- onEnded(callback: (audioId:number) => void): void
+
+#### AudioCatalogService
+- list(): AudioItem[]
+- getById(id: number): AudioItem | undefined
+
+AudioItem:
+- id: number
+- nome: string
+- duracao: string
+- tipo: 'música' | 'podcast' | 'audiobook'
+- url: string
+
+### Fluxo de comunicação
+1. Usuário obtém a lista de áudios via AudioCatalogService
+2. Usuário clica em play/pause
+3. Componente Usuário chama AudioPlaybackService para tocar ou pausar
+4. Componente Áudio executa a ação internamente
+5. Componente Usuário atualiza destaque do nome do áudio ativo
+
+### Arquivos principais
+src/views/CatalogView.vue — tela principal
+src/components/AudioCatalog.vue — componente do usuário
+src/services/AudioService.js — serviço de áudios
+public/audios/ — local dos arquivos .mp3
+
+---
+
+## 3️⃣ Funcionalidades implementadas
+- Lista de áudios (músicas, podcasts, audiobooks)
+- Destaque visual do nome do áudio ativo, permanece azul quando pausado
+- Botão play/pause alternando ícones (▶ / ⏸)
+- Comunicação entre Áudio e Usuário via interfaces
+
+---
+
+## 4️⃣ Próximos passos
+- Implementar reprodução real de áudio via HTML5 Audio
+- Adicionar filtros ou categorias no catálogo
+- Permitir persistência de histórico ou favoritos
+
+> Este README documenta o projeto Waveform, demonstrando comunicação entre componentes via interfaces.

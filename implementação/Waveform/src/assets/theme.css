@@ -1,0 +1,73 @@
+:root {
+  --bg-main: #121212;
+  --bg-card: #1e1e1e;
+  --bg-item: #2a2a2a;
+
+  --text-main: #e0e0e0;
+  --text-secondary: #b0b0b0;
+
+  --accent-blue: #8ecae6;
+}
+
+body {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5 {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: none;
+  color: var(--text-main);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  border: none;
+  color: #000;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.navbar {
+  background-color: #121212;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.audio-item {
+  background-color: var(--bg-item);
+  border-radius: 6px;
+  padding: 10px 14px;
+  transition: background 0.2s;
+}
+
+.audio-item:hover {
+  background-color: #353535;
+}
+
+.nav-item {
+  cursor: pointer;
+  transition: color 0.2s;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  color: var(--accent-blue);
+}
