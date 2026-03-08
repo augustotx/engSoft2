@@ -17,4 +17,4 @@ VueJS foi escolhido por ser simples de entender e utilizar linguagens _web_ trad
 
 ## Implementação
 
-Implementações se encontram na pasta `implementações` nesse repositório. As implementações contêm READMEs para testar e rodar o código.
+A implementação se encontra na pasta `implementacao/Waveform` nesse repositório. Dentro dela contém um README com instruções para testar e rodar o código.
