@@ -68,7 +68,7 @@ src/services/AudioService.js — serviço de áudios
 
 ---
 
-## 3️⃣ Funcionalidades implementadas
+## 3 Funcionalidades implementadas
 - Lista de áudios (músicas, podcasts, audiobooks)
 - Destaque visual do nome do áudio ativo, permanece destacado quando pausado
 - Botão play/pause alternando ícones (▶ / ⏸)
