@@ -71,3 +71,40 @@ h1, h2, h3, h4, h5 {
 .nav-item:hover {
   color: var(--accent-blue);
 }
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.btn-icon:hover {
+  color: var(--accent-blue);
+}
+
+.search-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--bg-item);
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text-main);
+  outline: none;
+  transition: border 0.2s;
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.search-input:focus {
+  border-color: var(--accent-blue);
+}

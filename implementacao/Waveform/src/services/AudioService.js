@@ -46,10 +46,6 @@ const audios = [
 ]
 
 export function listarAudios() {
-  for (let i = 0; i < audios.length; i++) {
-    console.log("Audio:", audios[i].nome)
-  }
-
   return audios
 }
 

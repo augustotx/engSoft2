@@ -18,6 +18,10 @@ function tocar(audio) {
 
   console.log("Tocando áudio:", audio.nome)
 }
+
+function download(audio) {
+  console.log("Baixando áudio:", audio.nome)
+}
 </script>
 
 <template>
@@ -30,12 +34,32 @@ function tocar(audio) {
 
       <div :style="{ color: ativoId === audio.id ? 'var(--accent-blue)' : 'var(--text-main)' }">
         <div>{{ audio.nome }}</div>
-        <small class="text-secondary">{{ audio.tipo }} • {{ audio.duracao }}</small>
+        <small class="text-secondary">
+          {{ audio.tipo }} • {{ audio.duracao }}
+        </small>
       </div>
 
-      <button class="btn btn-primary btn-sm" @click="tocar(audio)">
-        {{ ativoId === audio.id && tocando ? '⏸' : '▶' }}
-      </button>
+      <div class="d-flex align-items-center">
+
+        <div class="d-flex gap-1">
+          <button class="btn-icon">
+            +
+          </button>
+
+          <button class="btn-icon" @click="download(audio)">
+            ⬇
+          </button>
+        </div>
+
+        <button
+          class="btn btn-primary btn-sm ms-2"
+          @click="tocar(audio)"
+        >
+          {{ ativoId === audio.id && tocando ? '⏸' : '▶' }}
+        </button>
+
+      </div>
+
     </div>
   </div>
 </template>
