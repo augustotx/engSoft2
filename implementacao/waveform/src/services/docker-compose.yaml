@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: 'postgres:15.6'
+    container_name: 'postgres'
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: spotfei
+      POSTGRES_USER: spotfei_usr
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - SpotFEI_Network
+networks:
+  SpotFEI_Network:
