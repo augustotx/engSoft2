@@ -1,4 +1,4 @@
-# SpotFEI – Frontend
+# Waverform – Frontend
 
 ## Como rodar o projeto
 
