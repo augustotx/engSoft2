@@ -1,4 +1,4 @@
-# SpotFEI – Frontend
+# Waveform – Frontend
 
 ## Como rodar o projeto
 
@@ -6,8 +6,9 @@ Para começar a trabalhar no projeto, siga os passos abaixo:
 
 ```bash
 git clone https://github.com/augustotx/gestaoDeProjs.git
-cd gestaoDeProjs/SpotFEI
+cd gestaoDeProjs
 git checkout implementacao
+cd waveformMain/implementacao/waveform
 npm install
 npm run dev
 ```
@@ -190,3 +191,34 @@ antes de fazer commit.
 No momento ainda **não existe uma navbar ou menu de navegação**, então todas as páginas precisam ser acessadas manualmente pela URL.
 
 Isso pode ser melhorado posteriormente adicionando um componente de navegação global.
+
+---
+
+# Para desenvolvedores(as):
+
+O projeto é um submódulo dentro do [repositório de gestão](https://github.com/augustotx/gestaoDeProjs), então para clonar o repositório completo com o frontend, use:
+
+```bash
+# obviamente sem as aspas e as setas
+git clone "<repositório principal>"
+
+cd gestaoDeProjs/
+
+# isso vai clonar o frontend dentro da pasta waveformMain
+git submodule update --init --recursive
+```
+
+Qualquer commit dentro desse submódulo deve ser feito dentro da pasta dele. Depois, para atualizar o repositório principal, é necessário fazer um commit do submódulo atualizado.
+
+```bash
+# vamos supor que você fez um commit dentro do waveformMain
+git commit -m "commit do front"
+git push
+
+# depois disso, é necessário atualizar o repositório principal para apontar para o novo commit do submódulo
+cd .. # ou qualquer lugar que esteja o repositório principal
+git add . # add tudo
+
+git commit -m "atualizando submódulo do front"
+git push origin implementacao # (por exemplo)
+```
