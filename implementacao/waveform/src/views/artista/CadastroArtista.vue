@@ -14,7 +14,7 @@
 
         <p class="text-center mb-0">
           Já tem uma conta?
-          <router-link to="/ouvinte/login">Entrar</router-link>
+          <router-link to="/artista/login">Entrar</router-link>
         </p>
       </div>
     </div>
