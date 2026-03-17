@@ -57,6 +57,41 @@ Se quizerem mais cores vão no site da catppuccin e peguem do esquema de cores "
 	--pink: #f5c2e7;
 	--flamingo: #f2cdcd;
 	--rosewater: #f5e0dc;
+
+	/* modo claro, as cores são mais claras e suaves,
+	 * mas ainda mantendo a mesma paleta de cores */
+	@media (prefers-color-scheme: light) {
+		--base: #eff1f5;
+		--mantle: #e6e9ef;
+		--crust: #dce0e8;
+
+		--text: #4c4f69;
+		--subtext0: #6c6f85;
+		--subtext1: #5c5f77;
+
+		--surface0: #ccd0da;
+		--surface1: #bcc0cc;
+		--surface2: #acb0be;
+
+		--overlay0: #9ca0b0;
+		--overlay1: #8c8fa1;
+		--overlay2: #7c7f93;
+
+		--blue: #1e66f5;
+		--lavender: #7287fd;
+		--sapphire: #209fb5;
+		--sky: #04a5e5;
+		--teal: #179299;
+		--green: #40a02b;
+		--yellow: #df8e1d;
+		--peach: #fe640b;
+		--maroon: #e64553;
+		--red: #e64553;
+		--mauve: #8839ef;
+		--pink: #ea76cb;
+		--flamingo: #dd7878;
+		--rosewater: #dc8a78;
+	}
 }
 
 /* ------------------------------------------------------
@@ -65,7 +100,6 @@ Se quizerem mais cores vão no site da catppuccin e peguem do esquema de cores "
  * Esses estilos aplicam as cores e fontes definidas na
  * paleta a elementos globais como o body, navbar e cards
  * para garantir que o tema seja consistente em toda a aplicação. */
-
 
 body {
 	background-color: var(--base);
@@ -80,6 +114,10 @@ body {
 .navbar * * {
 	background-color: var(--surface0) !important;
 	color: var(--text) !important;
+}
+
+.pc-navbar {
+	max-height: 4rem;
 }
 
 .card {
@@ -103,38 +141,38 @@ body {
  * ~augusto */
 
 input[type="range"]::-webkit-slider-thumb {
-  background: var(--mauve);
-  border-radius: 1rem;
+	background: var(--mauve);
+	border-radius: 1rem;
 }
 
 input[type="range"]::-moz-range-thumb {
-  background: var(--mauve);
-  border-radius: 1rem;
+	background: var(--mauve);
+	border-radius: 1rem;
 }
 
 input[type="range"]::-ms-thumb {
-  background: var(--mauve);
-  border-radius: 1rem;
+	background: var(--mauve);
+	border-radius: 1rem;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-  background: var(--surface2);
-  border-radius: 1rem;
+	background: var(--surface2);
+	border-radius: 1rem;
 }
 
 input[type="range"]::-moz-range-track {
-  background: var(--surface2);
-  border-radius: 1rem;
+	background: var(--surface2);
+	border-radius: 1rem;
 }
 
 input[type="range"]::-ms-track {
-  background: var(--surface2);
-  border-radius: 1rem;
+	background: var(--surface2);
+	border-radius: 1rem;
 }
 
 input[type="range"]::-moz-range-progress {
-  background: var(--mauve);
-  border-radius: 1rem;
+	background: var(--mauve);
+	border-radius: 1rem;
 }
 
 /* ------------------------------------------------------
@@ -149,11 +187,16 @@ input[type="range"]::-moz-range-progress {
 	color: var(--text) !important;
 }
 
+
 .form-control {
 	background-color: var(--overlay0) !important;
 	color: var(--text) !important;
 	border: 1px solid var(--overlay1) !important;
 	border-radius: 0.25rem;
+}
+
+.form-control::placeholder {
+	color: var(--overlay2) !important;
 }
 
 /* quando o usuario estiver digitando nele aqui */
@@ -171,4 +214,38 @@ input[type="range"]::-moz-range-progress {
 	background-color: var(--mauve) !important;
 	border-color: var(--mauve) !important;
 	color: var(--base) !important;
+}
+
+.btn-primary:hover {
+	transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+	background-color: var(--base) !important;
+	color: var(--mauve) !important;
+}
+
+.btn-outline-primary {
+	background-color: var(--mauve) !important;
+	border-color: var(--mauve) !important;
+	color: var(--base) !important;
+}
+
+.btn-google {
+	background-color: white !important;
+	border-color: white !important;
+	color: black !important;
+}
+
+.btn-google:hover {
+	/* diferença na borda pra o usuário ver*/
+	border-color: var(--overlay2) !important;
+}
+
+a {
+	transition: color 0.3s ease;
+	color: var(--blue) !important;
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--mauve) !important;
+	text-decoration: none;
 }

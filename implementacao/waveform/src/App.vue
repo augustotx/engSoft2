@@ -7,7 +7,7 @@ import SeekBar from './components/SeekBar.vue';
   <div class="d-flex flex-column" style="min-height: calc(100vh - 4rem);">
   <!-- NAVBAR -->
   <!-- a primeira navbar é pra PC, a segunda pra mobile -->
-  <div class="navbar navbar-expand-lg d-none d-lg-flex">
+  <div class="navbar navbar-expand-lg d-none d-lg-flex pc-navbar">
     <div class="container">
       <!-- É UM PLACEHOLDER, NÃO TEM LOGO AINDA -->
       <router-link class="navbar-brand" to="/musicas">
@@ -56,12 +56,19 @@ import SeekBar from './components/SeekBar.vue';
 </template>
 
 <script>
+// funcao auxiliar pra setar o tamanho do logo, porque o height do navbar é fixo e a altura
+// do logo tem que ser um pouco menor que a altura do navbar pra caber dentro dele
+function setLogoSize() {
+    const logo = document.querySelector('.pc-navbar img');
+    const navbar = document.querySelector('.pc-navbar');
+    logo.style.height = navbar.offsetHeight - 16 + 'px'; // 16px é a margem vertical do logo
+    console.log('Logo height set to: ' + logo.style.height);
+}
 export default {
   mounted() {
-    // seta o tamanho do logo por aqui
-    const logo = document.querySelector('.navbar img');
-    const navbar = document.querySelector('.navbar');
-    logo.style.height = navbar.offsetHeight - 16 + 'px'; // 16px é a margem vertical do logo
+    setLogoSize();
+    // também tem que ajustar o tamanho do logo quando a janela for redimensionada, pra manter o logo do tamanho certo
+    window.addEventListener('resize', setLogoSize);
   }
 }
 </script>

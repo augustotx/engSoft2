@@ -112,7 +112,7 @@ function download(audio) {
           class="btn btn-primary btn-sm"
           @click="tocar(audio)"
         >
-          {{ ativoId === audio.id && tocando ? '⏸' : '▶' }}
+	<i class="fa-solid" :class="ativoId === audio.id && tocando ? 'fa-pause' : 'fa-play'"></i>
         </button>
 
       </div>

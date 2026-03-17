@@ -18,14 +18,14 @@
           <div class="text-muted small text-truncate">{{ displayArtist }}</div>
         </div>
 
-        <!-- Play/Pause – perfectly centered button -->
+        <!-- Play/Pause -->
         <div class="col-auto">
           <button
             class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
             style="width: 32px; height: 32px; padding: 0;"
             @click="togglePlay"
           >
-            {{ isPlaying ? '⏸️' : '▶️' }}
+	  <i class="fa-solid" :class="isPlaying ? 'fa-pause' : 'fa-play'"></i>
           </button>
         </div>
 
@@ -45,9 +45,9 @@
             />
             <span class="small text-muted">{{ formatTime(duration) }}</span>
 
-            <!-- Volume – inline and visible only on md+ -->
+            <!-- Volume -->
             <div class="d-none d-md-flex align-items-center gap-1 ms-2">
-              <span class="small d-flex align-items-center" style="line-height: 1;">🔊</span>
+		    <span class="small d-flex align-items-center" style="line-height: 1;"><i class="fa-solid" :class="getVolumeIcon()"></i></span>
               <input
                 type="range"
                 class="form-range volume-range"
@@ -119,7 +119,7 @@ const isPlaying = ref(false)
 const currentTime = ref(0)
 const duration = ref(0)
 const seekValue = ref(0)
-const volume = ref(0.7)
+const volume = ref(1.0)
 
 // URL do áudio para o elemento <audio>
 const audioObjectUrl = ref('')
@@ -315,6 +315,13 @@ const updateVolume = () => {
   if (audio) {
     audio.volume = volume.value
   }
+}
+
+// Ícone de volume baseado no nível
+const getVolumeIcon = () => {
+  if (volume.value == 0) return 'fa-volume-xmark'
+  if (volume.value < 0.65) return 'fa-volume-low'
+  return 'fa-volume-high'
 }
 
 // Limpar recursos quando o componente for destruído
