@@ -27,39 +27,148 @@ Se quizerem mais cores vão no site da catppuccin e peguem do esquema de cores "
 */
 
 :root {
-    --base: #1e1e2e;
-    --mantle: #181825;
-    --crust: #11111b;
+	--base: #1e1e2e;
+	--mantle: #181825;
+	--crust: #11111b;
 
-    --text: #cdd6f4;
-    --subtext0: #a6adc8;
-    --subtext1: #bac2de;
+	--text: #cdd6f4;
+	--subtext0: #a6adc8;
+	--subtext1: #bac2de;
 
-    --surface0: #313244;
-    --surface1: #45475a;
-    --surface2: #585b70;
+	--surface0: #313244;
+	--surface1: #45475a;
+	--surface2: #585b70;
 
-    --overlay0: #6c7086;
-    --overlay1: #7f849c;
-    --overlay2: #9399b2;
+	--overlay0: #6c7086;
+	--overlay1: #7f849c;
+	--overlay2: #9399b2;
 
-    --blue: #89b4fa;
-    --lavender: #b4befe;
-    --sapphire: #74c7ec;
-    --sky: #89dceb;
-    --teal: #94e2d5;
-    --green: #a6e3a1;
-    --yellow: #f9e2af;
-    --peach: #fab387;
-    --maroon: #eba0ac;
-    --red: #f38ba8;
-    --mauve: #cba6f7;
-    --pink: #f5c2e7;
-    --flamingo: #f2cdcd;
-    --rosewater: #f5e0dc;
+	--blue: #89b4fa;
+	--lavender: #b4befe;
+	--sapphire: #74c7ec;
+	--sky: #89dceb;
+	--teal: #94e2d5;
+	--green: #a6e3a1;
+	--yellow: #f9e2af;
+	--peach: #fab387;
+	--maroon: #eba0ac;
+	--red: #f38ba8;
+	--mauve: #cba6f7;
+	--pink: #f5c2e7;
+	--flamingo: #f2cdcd;
+	--rosewater: #f5e0dc;
 }
 
+/* ------------------------------------------------------
+ * 	     Estilos globais para o tema
+ * ------------------------------------------------------
+ * Esses estilos aplicam as cores e fontes definidas na
+ * paleta a elementos globais como o body, navbar e cards
+ * para garantir que o tema seja consistente em toda a aplicação. */
+
+
 body {
-    background-color: var(--base);
-    color: var(--text);
+	background-color: var(--base);
+	color: var(--text);
+	min-height: 100vh;
+}
+
+/* essa classe css serve tanto pra .navbar quanto pra qualquer
+ * filho ou filho de filho etc */
+.navbar,
+.navbar *,
+.navbar * * {
+	background-color: var(--surface0) !important;
+	color: var(--text) !important;
+}
+
+.card {
+	background-color: var(--surface1) !important;
+	color: var(--text) !important;
+	border-radius: 0.5rem;
+	padding: 1rem;
+	margin-bottom: 1rem;
+}
+
+.seekbar,
+.seekbar * {
+	background-color: var(--surface0) !important;
+	color: var(--text) !important;
+	border: none !important;
+}
+
+/* essas são as barras de tempo e volume de música.
+ * é um saco pq tem que mudar pra chrome e firefox,
+ * mas é necessário pra manter o tema consistente *
+ * ~augusto */
+
+input[type="range"]::-webkit-slider-thumb {
+  background: var(--mauve);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: var(--mauve);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-ms-thumb {
+  background: var(--mauve);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--surface2);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-moz-range-track {
+  background: var(--surface2);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-ms-track {
+  background: var(--surface2);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-moz-range-progress {
+  background: var(--mauve);
+  border-radius: 1rem;
+}
+
+/* ------------------------------------------------------
+ *               Estilos para formulários
+ * ------------------------------------------------------
+ * Esses estilos são aplicados a elementos de formulário
+ * como labels, inputs, selects e textareas para garantir
+ * que eles se integrem bem com o tema geral usando as
+ * cores e estilos definidos na paleta. */
+
+.form-label {
+	color: var(--text) !important;
+}
+
+.form-control {
+	background-color: var(--overlay0) !important;
+	color: var(--text) !important;
+	border: 1px solid var(--overlay1) !important;
+	border-radius: 0.25rem;
+}
+
+/* quando o usuario estiver digitando nele aqui */
+.form-control:focus {
+	background-color: var(--overlay0) !important;
+	color: var(--text) !important;
+	border: 1px solid var(--overlay2) !important;
+	box-shadow: 0 0 0 0.2rem var(--overlay2) !important;
+}
+
+/* eu deixei botoes no formulario pq geralmente é onde se usa
+ * ~augusto */
+
+.btn-primary {
+	background-color: var(--mauve) !important;
+	border-color: var(--mauve) !important;
+	color: var(--base) !important;
 }
