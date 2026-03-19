@@ -135,6 +135,11 @@ body {
 	border: none !important;
 }
 
+.bg-secondary {
+	background-color: var(--surface0) !important;
+	color: var(--text) !important;
+}
+
 /* essas são as barras de tempo e volume de música.
  * é um saco pq tem que mudar pra chrome e firefox,
  * mas é necessário pra manter o tema consistente *
@@ -248,4 +253,80 @@ a {
 a:hover {
 	color: var(--mauve) !important;
 	text-decoration: none;
+}
+
+/* ------------------------------------------------------
+ *          Estilos para o Marquee de títulos
+ * ------------------------------------------------------
+ * These styles allow long song titles to scroll smoothly
+ * without breaking the layout.
+ */
+.marquee-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+.marquee-wrapper.active {
+  overflow: hidden; /* Ensures no scrollbar appears */
+}
+.marquee-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee linear infinite;
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } /* Scrolls half the width, duplicates content */
+}
+/* Hide the measuring spans used for overflow detection */
+.invisible {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.track-info-col {
+  max-width: 80%; /* xs (extra small) */
+}
+
+/* sm (≥576px) */
+@media (min-width: 576px) {
+  .track-info-col {
+    max-width: 80%;
+  }
+}
+
+/* md (≥768px) */
+@media (min-width: 768px) {
+  .track-info-col {
+    max-width: 28%;
+  }
+}
+
+/* lg (≥992px) */
+@media (min-width: 992px) {
+  .track-info-col {
+    max-width: 37%;
+  }
+}
+
+/* xl (≥1200px) */
+@media (min-width: 1200px) {
+  .track-info-col {
+    max-width: 40%;
+  }
+}
+
+/* -------------------------------------------------------
+ *      Estilos pra faixas do álbum (e outras listas)
+ * ------------------------------------------------------
+ */
+
+.list-group-item {
+	background-color: var(--surface1) !important;
+	color: var(--text) !important;
+	border: none !important;
+}
+
+.badge {
+	color: var(--text) !important;
 }

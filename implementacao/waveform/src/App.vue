@@ -1,6 +1,7 @@
 <script setup>
 import SeekBar from './components/SeekBar.vue';
-
+import { usePlayerStore } from './stores/player';
+const playerStore = usePlayerStore();
 </script>
 
 <template>
@@ -43,6 +44,7 @@ import SeekBar from './components/SeekBar.vue';
   </div>
   <!-- div de margem inferior pra dar um espaço entre o conteúdo e a seekbar -->
   <div style="height: 5rem;"></div>
+  <div style="height: 5rem;"></div>
   <!-- CONTEÚDO PRINCIPAL END -->
   <!-- SEEKBAR -->
   <!-- audioSrc é a fonte do áudio, que pode ser um arquivo local ou uma URL -->
@@ -50,7 +52,7 @@ import SeekBar from './components/SeekBar.vue';
   na pasta public do projeto com esse nome. a SeekBar vai pegar os metadados
   do arquivo e mostrar a duração, e vai tocar, etc. ~augusto -->
   <SeekBar
-      audioSrc=""
+    :audioSrc="playerStore.currentSongUrl"
   />
 </div>
 </template>

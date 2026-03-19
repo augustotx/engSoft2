@@ -11,12 +11,32 @@
             class="rounded"
           />
         </div>
+<!-- Track info -->
+<div class="col me-auto min-width-0 track-info-col">
+  <!-- Title with marquee -->
+  <div class="fw-bold position-relative" ref="titleContainer">
+    <!-- Hidden measuring span -->
+    <span ref="titleMeasure" class="invisible position-absolute" style="white-space: nowrap;">{{ displayTitle }}</span>
+    <!-- Marquee container -->
+    <div class="marquee-wrapper" :class="{ 'active': titleOverflow }">
+      <div class="marquee-content" v-if="titleOverflow" :style="{ animationDuration: titleDuration + 's' }">
+        <span>{{ displayTitle }}</span><span>{{ displayTitle }}</span>
+      </div>
+      <div v-else class="text-truncate">{{ displayTitle }}</div>
+    </div>
+  </div>
 
-        <!-- Track info -->
-        <div class="col me-auto min-width-0">
-          <div class="fw-bold text-truncate">{{ displayTitle }}</div>
-          <div class="text-muted small text-truncate">{{ displayArtist }}</div>
-        </div>
+  <!-- Artist with marquee -->
+  <div class="text-muted small position-relative" ref="artistContainer">
+    <span ref="artistMeasure" class="invisible position-absolute" style="white-space: nowrap;">{{ displayArtist }}</span>
+    <div class="marquee-wrapper" :class="{ 'active': artistOverflow }">
+      <div class="marquee-content" v-if="artistOverflow" :style="{ animationDuration: artistDuration + 's' }">
+        <span>{{ displayArtist }}</span><span>{{ displayArtist }}</span>
+      </div>
+      <div v-else class="text-truncate">{{ displayArtist }}</div>
+    </div>
+  </div>
+</div>
 
         <!-- Play/Pause -->
         <div class="col-auto">
@@ -79,7 +99,7 @@
 
 // Vcs vão perceber que tem algumas variáveis não utilizadas. Eu deixei elas pra compatiblidade, mas não sei se é necessário. Dps a gente testa
 // ~augusto
-import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
 
 const props = defineProps({
   // Arquivo dado pelo usuário (e.g., via input type="file")
@@ -126,6 +146,66 @@ const audioObjectUrl = ref('')
 
 // Controlador de fetch para abortar requisições anteriores
 let currentFetchController = null
+
+// --------------------------------------------------------------
+//                     MARQUEE (SCROLLING TEXT)
+// --------------------------------------------------------------
+// Refs for overflow detection
+const titleContainer = ref(null)
+const artistContainer = ref(null)
+const titleMeasure = ref(null)
+const artistMeasure = ref(null)
+const titleOverflow = ref(false)
+const artistOverflow = ref(false)
+const titleDuration = ref(10)
+const artistDuration = ref(10)
+
+// Function to check overflow and set durations
+function checkOverflow() {
+  if (titleMeasure.value && titleContainer.value) {
+    const textWidth = titleMeasure.value.offsetWidth
+    const containerWidth = titleContainer.value.clientWidth
+    titleOverflow.value = textWidth > containerWidth
+    console.log('Title overflow:', titleOverflow.value, textWidth, containerWidth);
+    if (titleOverflow.value) {
+      // Duration proportional to how many times the text is wider (base 5s + extra)
+      const ratio = textWidth / containerWidth
+      titleDuration.value = Math.max(5, Math.round(ratio * 4))
+    }
+  }
+  if (artistMeasure.value && artistContainer.value) {
+    const textWidth = artistMeasure.value.offsetWidth
+    const containerWidth = artistContainer.value.clientWidth
+    artistOverflow.value = textWidth > containerWidth
+    if (artistOverflow.value) {
+      const ratio = textWidth / containerWidth
+      artistDuration.value = Math.max(5, Math.round(ratio * 4))
+    }
+  }
+}
+
+// Use ResizeObserver to detect container size changes
+let resizeObserver
+onMounted(() => {
+  checkOverflow()
+  resizeObserver = new ResizeObserver(() => {
+    checkOverflow()
+  })
+  if (titleContainer.value) resizeObserver.observe(titleContainer.value)
+  if (artistContainer.value) resizeObserver.observe(artistContainer.value)
+})
+
+onBeforeUnmount(() => {
+  if (resizeObserver) resizeObserver.disconnect()
+})
+
+// Re-check when the text changes (e.g., new song loaded)
+watch([trackTitle, trackArtist], () => {
+  nextTick(() => {
+    checkOverflow()
+  })
+})
+// --------------------------------------------------------------
 
 // Formata tempo em segundos para mm:ss
 const formatTime = (seconds) => {
@@ -212,9 +292,6 @@ async function loadFromUrl(url) {
 
   if (!url) return
 
-  // Para o mesmo URL, o navegador pode usar cache, mas
-  // ainda assim vamos tentar buscar e analisar os metadados
-  // para garantir que estão atualizados
   try {
     currentFetchController = new AbortController()
     const response = await fetch(url, { signal: currentFetchController.signal })
@@ -225,12 +302,27 @@ async function loadFromUrl(url) {
 
     // Criar URL para o elemento <audio>
     audioObjectUrl.value = URL.createObjectURL(blob)
+
+    // Aguardar próximo tick para garantir que o src foi atualizado no DOM
+    await nextTick()
+
+    // Forçar carregamento da nova fonte
+    audioRef.value.load()
+
+    // Remover listeners antigos (se houver) e adicionar um para 'canplay'
+    const audio = audioRef.value
+    const onCanPlay = () => {
+      audio.play().catch(err => console.error('Playback failed:', err))
+      isPlaying.value = true
+      audio.removeEventListener('canplay', onCanPlay)
+    }
+    audio.addEventListener('canplay', onCanPlay)
+
   } catch (err) {
     if (err.name === 'AbortError') {
       console.log('Fetch aborted')
     } else {
       console.error('Failed to fetch or parse remote file:', err)
-      // Se falha, não dá pra carregar o áudio
     }
   } finally {
     currentFetchController = null
@@ -248,8 +340,9 @@ watch(() => props.audioFile, (newFile) => {
 }, { immediate: true })
 
 watch(() => props.audioSrc, (newUrl, oldUrl) => {
-  // Só reagir se não tiver um arquivo local, para evitar conflitos
+  console.log('audioSrc changed:', newUrl, oldUrl)
   if (!props.audioFile && newUrl) {
+    console.log('calling loadFromUrl')
     loadFromUrl(newUrl)
   }
 })
@@ -338,9 +431,3 @@ onBeforeUnmount(() => {
   }
 })
 </script>
-
-<style scoped>
-.seekbar {
-  z-index: 1030;
-}
-</style>

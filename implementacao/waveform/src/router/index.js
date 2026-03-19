@@ -7,6 +7,7 @@ import RegisterArtist from "@/views/artista/CadastroArtista.vue"
 import MusicCatalog from "@/views/musica/CatalogoMusicas.vue"
 import Playlists from "@/views/ouvinte/Playlists.vue"
 import CriarPlaylist from "@/views/ouvinte/CriarPlaylist.vue"
+import AlbumView from "@/views/AlbumView.vue"
 
 const routes = [
   { path: "/", redirect: "/musicas" },
@@ -16,7 +17,8 @@ const routes = [
   { path: "/artista/cadastro", component: RegisterArtist },
   { path: "/musicas", component: MusicCatalog },
   { path: "/playlists", component: Playlists },
-  { path: "/playlists/criar", component: CriarPlaylist }
+  { path: "/playlists/criar", component: CriarPlaylist },
+  { path: "/albuns/:id", component: AlbumView }
 ]
 
 export default createRouter({

@@ -196,6 +196,8 @@ Isso pode ser melhorado posteriormente adicionando um componente de navegação 
 
 # Para desenvolvedores(as):
 
+## Submódulo do frontend
+
 O projeto é um submódulo dentro do [repositório de gestão](https://github.com/augustotx/gestaoDeProjs), então para clonar o repositório completo com o frontend, use:
 
 ```bash
@@ -222,3 +224,30 @@ git add . # add tudo
 git commit -m "atualizando submódulo do front"
 git push origin implementacao # (por exemplo)
 ```
+
+## PostgreSQL
+
+Ele roda em um container Docker, então para iniciar o banco de dados, use:
+
+```bash
+docker compose up -d
+```
+
+Ele vai criar o container com o PostgreSQL já configurado, aí pra usar ele junto do front é só rodar o backend:
+
+```bash
+cd backend
+npm install # caso ainda não tenha instalado as dependências
+node index.js
+```
+
+Ele usa a porta 3000, então o frontend pode acessar a API normalmente em `http://localhost:3000`.
+
+Qualquer adição de dados no banco, por favor fazer isso via arquivos .sql dentro da pasta `sql` do backend, para manter a organização. Esses arquivos podem ser rodados da seguinte forma:
+
+```bash
+docker cp <arquivo.sql> postgres-custom:<arquivo.sql>
+docker exec -it postgres-custom psql -U fei -d maindb -f /<arquivo.sql>
+```
+
+Eu (Augusto) deixei o init.sql na raiz do projeto, então ele já é rodado automaticamente quando o container é criado, mas para adicionar mais dados depois disso, é necessário seguir os passos acima. Eu deixei um exemplo de arquivo de inserção de dados dentro da pasta `sql` do backend, para servir como modelo (adiciona um artista, um álbum e nove músicas).
