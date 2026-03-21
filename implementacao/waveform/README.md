@@ -251,3 +251,26 @@ docker exec -it postgres-custom psql -U fei -d maindb -f /<arquivo.sql>
 ```
 
 Eu (Augusto) deixei o init.sql na raiz do projeto, então ele já é rodado automaticamente quando o container é criado, mas para adicionar mais dados depois disso, é necessário seguir os passos acima. Eu deixei um exemplo de arquivo de inserção de dados dentro da pasta `sql` do backend, para servir como modelo (adiciona um artista, um álbum e nove músicas).
+
+### Scripts nas pasta backend para adicionar novos artistas, albuns e músicas na DB:
+
+#### Artista
+Cria o artista no banco para gerar um ID.
+
+```bash
+node AddArtista.js "Nome do Artista"
+```
+### Album
+Cria o álbum vinculado a um Artista. Você precisa do ID do artista gerado no passo anterior.
+```bash
+node AddAlbum.js <ID_ARTISTA> "caminho/da/capa.jpg" "Nome do Album"
+```
+
+### Música
+Adiciona a faixa ao álbum. Requer ID do Álbum e ID do Artista. 
+```bash
+node AddMusica.js <ID_ALBUM> <ID_ARTISTA> <NUMERO_FAIXA> "caminho/do/arquivo.mp3" "Titulo da Musica"
+```
+
+
+

@@ -20,7 +20,7 @@
           v-if="coverImageUrl"
         />
         <div v-else class="bg-secondary text-white d-flex align-items-center justify-content-center rounded shadow" style="height: 300px;">
-          Sem capa
+          Sem capag
         </div>
       </div>
 
