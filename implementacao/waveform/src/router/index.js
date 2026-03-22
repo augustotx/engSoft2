@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router"
+import MainLayout from "@/components/MainLayout.vue"
+import LandingPage from "@/views/landingpage/index.vue"
 
 import LoginOuvinte from "@/views/ouvinte/LoginOuvinte.vue"
 import RegisterListener from "@/views/ouvinte/CadastroOuvinte.vue"
@@ -10,18 +12,24 @@ import CriarPlaylist from "@/views/ouvinte/CriarPlaylist.vue"
 import AlbumView from "@/views/AlbumView.vue"
 
 const routes = [
-  { path: "/", redirect: "/musicas" },
+  { path: "/", component: LandingPage },
   { path: "/ouvinte/login", component: LoginOuvinte },
   { path: "/ouvinte/cadastro", component: RegisterListener },
   { path: "/artista/login", component: LoginArtist },
   { path: "/artista/cadastro", component: RegisterArtist },
-  { path: "/musicas", component: MusicCatalog },
-  { path: "/playlists", component: Playlists },
-  { path: "/playlists/criar", component: CriarPlaylist },
-  { path: "/albuns/:id", component: AlbumView }
+  {
+    path: "/", component: MainLayout,
+    children: [
+      { path: "/musicas", component: MusicCatalog },
+      { path: "/playlists", component: Playlists },
+      { path: "/playlists/criar", component: CriarPlaylist },
+      { path: "/albuns/:id", component: AlbumView },
+    ]
+  }
 ]
 
 export default createRouter({
   history: createWebHistory(),
   routes
 })
+

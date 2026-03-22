@@ -11,8 +11,13 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 // Import nosso tema principal
 import '../public/theme.css'
 
-const app = createApp(App)
+// Import Google-SignIn
+import GoogleSignInPlugin from "vue3-google-signin"
 
+const app = createApp(App)
+app.use(GoogleSignInPlugin, {
+    clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+});
 app.use(createPinia())
 app.use(router)
 
