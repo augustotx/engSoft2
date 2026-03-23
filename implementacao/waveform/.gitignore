@@ -40,3 +40,7 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Env
+.env
+backend/.env

@@ -241,6 +241,12 @@ npm install # caso ainda não tenha instalado as dependências
 node index.js
 ```
 
+Pegar o Arquivo .env.example e criar uma copia chamada apenas .env (Esta deve ficar apenas local)
+Nos Arquivo .env colocar as informações do google client id que estão no whatts. Não dar commit nesses ID por que são informações sensiveis.
+Um Arquivo .env esta no implementacao/waveform/backend
+O outro no implementacao/waveform
+
+
 Ele usa a porta 3000, então o frontend pode acessar a API normalmente em `http://localhost:3000`.
 
 Qualquer adição de dados no banco, por favor fazer isso via arquivos .sql dentro da pasta `sql` do backend, para manter a organização. Esses arquivos podem ser rodados da seguinte forma:

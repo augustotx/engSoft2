@@ -7,5 +7,6 @@ import CadastroCard from '@/views/templates/Cadastro.vue'
     titulo="Crie sua Conta de Ouvinte"
     login-link="/ouvinte/login"
     redirect-to="/musicas"
+    :role="'listener'"
   />
 </template>

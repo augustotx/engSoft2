@@ -2,6 +2,8 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 require('dotenv').config();
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -100,6 +102,57 @@ app.get('/api/songs', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/auth/google', async (req, res) => {
+  const { credential, username, role } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ error: 'Token do Google não fornecido.' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const google_id  = payload['sub'];
+    const email      = payload['email'];
+    const name       = payload['name'];
+    const picture    = payload['picture'];
+
+    const existing = await pool.query(
+      'SELECT * FROM users WHERE google_id = $1',
+      [google_id]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.json({ user: existing.rows[0], created: false });
+    }
+
+    if (!username || !role) {
+      return res.status(400).json({ error: 'Username e role são obrigatórios no cadastro.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO users (google_id, email, name, picture_url, username, role)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [google_id, email, name, picture, username, role]
+    );
+
+    return res.status(201).json({ user: result.rows[0], created: true });
+
+  } catch (err) {
+    console.error('Erro na autenticação Google:', err.message);
+
+    if (err.message.includes('duplicate key')) {
+      return res.status(409).json({ error: 'Username ou e-mail já está em uso.' });
+    }
+    return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
 
