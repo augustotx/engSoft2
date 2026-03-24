@@ -159,3 +159,87 @@ app.post('/api/auth/google', async (req, res) => {
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
 });
+// ==========================================
+// ROTAS DE PLAYLISTS
+// ==========================================
+
+// 1. Criar uma nova playlist para um usuário
+app.post('/api/playlists', async (req, res) => {
+  const { user_id, name } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO playlists (user_id, name) VALUES ($1, $2) RETURNING *',
+      [user_id, name]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao criar playlist' });
+  }
+});
+
+// 2. Buscar todas as playlists de um usuário específico
+app.get('/api/users/:userId/playlists', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM playlists WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar playlists' });
+  }
+});
+
+// 3. Adicionar uma música dentro de uma playlist
+app.post('/api/playlists/:playlistId/songs', async (req, res) => {
+  const { playlistId } = req.params;
+  const { song_id } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO playlist_songs (playlist_id, song_id) VALUES ($1, $2)',
+      [playlistId, song_id]
+    );
+    res.status(201).json({ message: 'Música adicionada à playlist com sucesso!' });
+  } catch (err) {
+    console.error(err);
+    // Erro 23505 no Postgres significa que tentou inserir um dado duplicado (chave primária)
+    if (err.code === '23505') { 
+       return res.status(409).json({ error: 'Esta música já está na playlist.' });
+    }
+    res.status(500).json({ error: 'Erro ao adicionar música na playlist' });
+  }
+});
+
+// 4. Buscar uma playlist específica COM as músicas dentro dela
+app.get('/api/playlists/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Primeiro, busca os dados básicos da playlist
+    const playlistResult = await pool.query('SELECT * FROM playlists WHERE id = $1', [id]);
+    
+    if (playlistResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Playlist não encontrada' });
+    }
+    
+    const playlist = playlistResult.rows[0];
+
+    // Depois, busca as músicas fazendo um JOIN com a tabela de relacionamento
+    const songsResult = await pool.query(`
+      SELECT songs.* FROM songs 
+      JOIN playlist_songs ON songs.id = playlist_songs.song_id
+      WHERE playlist_songs.playlist_id = $1
+      ORDER BY playlist_songs.added_at ASC
+    `, [id]);
+
+    // Junta as músicas dentro do objeto da playlist e envia pro frontend
+    playlist.songs = songsResult.rows;
+    res.json(playlist);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar detalhes da playlist' });
+  }
+});

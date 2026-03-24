@@ -282,5 +282,17 @@ Adiciona a faixa ao álbum. Requer ID do Álbum e ID do Artista.
 node AddMusica.js <ID_ALBUM> <ID_ARTISTA> <NUMERO_FAIXA> "caminho/do/arquivo.mp3" "Titulo da Musica"
 ```
 
+### Usuario
+Adiciona um usuario a DB, aqui tem um exemplo pronto, para ser usado em testes.
+```bash
+node AddUser.js <GOOGLE_ID> <EMAIL> <USERNAME> <ROLE> "NOME COMPLETO"
+node AddUser.js 1111111111 meuemail@gmail.com dev123 listener Joao da Silva
+```
+
+## Sobre a Criação de Playlists
+
+Como não ainda não estamos salvando o estado do usuário (quem é que está logado) as playlists criadas são sempre vinculadas ao usuário de id 1
+Então se forem criar uma playlist, lembrem de criar um usuário antes!
+
 
 

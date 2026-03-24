@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at  TIMESTAMP DEFAULT NOW()
 );
 
+
+
 -- Índices para buscas frequentes
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_users_email     ON users(email);

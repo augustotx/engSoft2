@@ -8,7 +8,7 @@ import LoginArtist from "@/views/artista/LoginArtista.vue"
 import RegisterArtist from "@/views/artista/CadastroArtista.vue"
 import MusicCatalog from "@/views/musica/CatalogoMusicas.vue"
 import Playlists from "@/views/ouvinte/Playlists.vue"
-import CriarPlaylist from "@/views/ouvinte/CriarPlaylist.vue"
+import PlaylistView from "@/views/ouvinte/PlaylistView.vue" 
 import AlbumView from "@/views/AlbumView.vue"
 
 const routes = [
@@ -22,7 +22,7 @@ const routes = [
     children: [
       { path: "/musicas", component: MusicCatalog },
       { path: "/playlists", component: Playlists },
-      { path: "/playlists/criar", component: CriarPlaylist },
+      { path: "/playlists/:id", component: PlaylistView}, 
       { path: "/albuns/:id", component: AlbumView },
     ]
   }
@@ -32,4 +32,3 @@ export default createRouter({
   history: createWebHistory(),
   routes
 })
-
