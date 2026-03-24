@@ -11,12 +11,15 @@ import Playlists from "@/views/ouvinte/Playlists.vue"
 import PlaylistView from "@/views/ouvinte/PlaylistView.vue" 
 import AlbumView from "@/views/AlbumView.vue"
 
+import AdminArtistas from "@/views/admin/AdminArtistas.vue"
+
 const routes = [
   { path: "/", component: LandingPage },
   { path: "/ouvinte/login", component: LoginOuvinte },
   { path: "/ouvinte/cadastro", component: RegisterListener },
   { path: "/artista/login", component: LoginArtist },
   { path: "/artista/cadastro", component: RegisterArtist },
+  { path: "/admin/artistas", component: AdminArtistas },
   {
     path: "/", component: MainLayout,
     children: [

@@ -137,13 +137,24 @@ app.post('/api/auth/google', async (req, res) => {
       return res.status(400).json({ error: 'Username e role são obrigatórios no cadastro.' });
     }
 
+    const status = role === 'artist' ? 'pending' : 'approved';
+
     const result = await pool.query(
-      `INSERT INTO users (google_id, email, name, picture_url, username, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [google_id, email, name, picture, username, role]
+     `INSERT INTO users (google_id, email, name, picture_url, username, role, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+     [google_id, email, name, picture, username, role, status]
     );
 
+    // Se for artista, salva bio e imagem na tabela artists
+    if (role === 'artist') {
+     const { bio, picture_path } = req.body;
+     await pool.query(
+      `INSERT INTO artists (name, bio, picture_path, user_id)
+       VALUES ($1, $2, $3, $4)`,
+      [name, bio || null, picture_path || null, result.rows[0].id]
+     );
+    }
     return res.status(201).json({ user: result.rows[0], created: true });
 
   } catch (err) {
@@ -241,5 +252,45 @@ app.get('/api/playlists/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao buscar detalhes da playlist' });
+  }
+});
+
+// Listar artistas pendentes
+app.get('/api/admin/artists/pending', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.id, u.name, u.email, u.username, u.created_at,
+             a.bio, a.picture_path
+      FROM users u
+      JOIN artists a ON a.user_id = u.id
+      WHERE u.role = 'artist' AND u.status = 'pending'
+      ORDER BY u.created_at ASC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar artistas pendentes.' });
+  }
+});
+
+// Aprovar ou rejeitar um artista
+app.patch('/api/admin/artists/:userId/status', async (req, res) => {
+  const { userId } = req.params;
+  const { status } = req.body;
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Status inválido.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE users SET status = $1 WHERE id = $2 AND role = 'artist' RETURNING *`,
+      [status, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Artista não encontrado.' });
+    }
+    res.json({ message: `Artista ${status === 'approved' ? 'aprovado' : 'rejeitado'} com sucesso.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar status.' });
   }
 });

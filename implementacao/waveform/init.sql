@@ -65,7 +65,9 @@ ALTER TABLE artists
 
 CREATE INDEX IF NOT EXISTS idx_artists_user_id ON artists(user_id);
 
-
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pending'
+  CHECK (status IN ('pending', 'approved', 'rejected'));
 
 -- Índices
 CREATE INDEX idx_albums_artist_id ON albums(artist_id);
