@@ -1,0 +1,22 @@
+1)
+Notificação Service
++enviarNotificacao(mensagem: String): boolean
+
+2)
+mensagem: String
+
+3)
+Políticas para Notificação Service:
+
+Segurança:
+- Autenticação: Requer que o usuário esteja logado para receber notificações.
+- Autorização: O sistema envia notificações automaticamente com base em eventos específicos, sem necessidade de autorização adicional.
+- Criptografia: HTTPS obrigatório (TLS 1.2 ou superior)
+- Limitação de uso: 100 notificações por usuário por hora para evitar spam e sobrecarga do sistema.
+
+4)
+SLAs para Notificação Service:
+- Disponibilidade esperada: 98%
+- Tempo de resposta: Menos de 200ms para receber notificações.
+- Capacidade: Suporte para até 1000 notificações por minuto.
+- Suporte Técnico: Disponível 24/7
