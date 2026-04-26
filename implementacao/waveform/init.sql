@@ -31,12 +31,12 @@ CREATE TABLE IF NOT EXISTS songs (
 
 CREATE TABLE IF NOT EXISTS users (
     id          SERIAL PRIMARY KEY,
-    google_id   VARCHAR(255) NOT NULL UNIQUE,   -- "sub" do token JWT do Google (identificador permanente)
+    google_id   VARCHAR(255),   -- "sub" do token JWT do Google (identificador permanente)
     email       VARCHAR(255) NOT NULL UNIQUE,   -- e-mail vindo do Google
     name        VARCHAR(255),                   -- nome completo vindo do Google
+    password    VARCHAR(255),                   -- senha do usuario (varchar hihi)
     picture_url VARCHAR(500),                   -- URL do avatar do Google
     username    VARCHAR(100) UNIQUE,            -- nome de usuário escolhido no cadastro
-    role        VARCHAR(20) NOT NULL DEFAULT 'listener' CHECK (role IN ('listener', 'artist')),
     created_at  TIMESTAMP DEFAULT NOW()
 );
 

@@ -5,7 +5,7 @@
       <router-link to="/ouvinte/cadastro" class="btn btn-primary btn-lg">
         Sou Ouvinte
       </router-link>
-      <router-link to="/artista/cadastro" class="btn btn-outline-primary btn-lg">
+      <router-link to="/artista/cadastro" class="btn btn-primary btn-lg">
         Sou Artista
       </router-link>
     </div>

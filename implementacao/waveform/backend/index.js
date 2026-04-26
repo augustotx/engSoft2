@@ -167,6 +167,43 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
+app.post('/api/auth/login', async (req, res) => {
+  const { email, username, password, name } = req.body;
+
+  if (!password || !email || !username || !name) {
+    return res.status(400).json({
+      error: 'Dados incompletos ou invalidos'
+    });
+  }
+
+  try {
+    const sql = `
+      INSERT INTO users ( email, username, password, name)
+      VALUES ($1, $2, $3, $4)
+      RETURNING email, username, password;
+    `;
+
+    const valores = [email, username, password, name];
+
+    const result = await pool.query(sql, valores);
+
+    res.status(201).json({
+      message: 'Usuario criado com sucesso',
+      user: result.rows[0]
+    });
+
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({
+        error: 'Usuario ja existe'
+      });
+    }
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
 });
