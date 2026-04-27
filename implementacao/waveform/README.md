@@ -256,9 +256,19 @@ docker cp <arquivo.sql> postgres-custom:<arquivo.sql>
 docker exec -it postgres-custom psql -U fei -d maindb -f /<arquivo.sql>
 ```
 
-Rodar:
+Rodar arquivo SQL:
+
+```bash
 docker cp backend/sql/create_users.sql postgres-custom:create_users.sql
 docker exec -it postgres-custom psql -U fei -d maindb -f /create_users.sql
+```
+
+Rodar o banco no CLI:
+
+```bash
+docker exec -it postgres-custom psql -U fei -d maindb
+```
+
 
 Eu (Augusto) deixei o init.sql na raiz do projeto, então ele já é rodado automaticamente quando o container é criado, mas para adicionar mais dados depois disso, é necessário seguir os passos acima. Eu deixei um exemplo de arquivo de inserção de dados dentro da pasta `sql` do backend, para servir como modelo (adiciona um artista, um álbum e nove músicas).
 
