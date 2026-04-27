@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { GoogleSignInButton, type CredentialResponse } from "vue3-google-signin"
+import { useNotificationsStore } from '../../stores/notifications'
 
 const props = defineProps<{
   titulo: string
@@ -9,6 +10,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const notificationsStore = useNotificationsStore()
 
 const handleLoginSuccess = (response: CredentialResponse) => {
   console.log("Access Token", response.credential)
@@ -16,7 +18,7 @@ const handleLoginSuccess = (response: CredentialResponse) => {
 }
 
 const handleLoginError = () => {
-  console.error("Login failed")
+  notificationsStore.enviarNotificacao('Falha ao fazer login. Tente novamente.', 'erro')
 }
 </script>
 

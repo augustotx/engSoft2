@@ -62,8 +62,10 @@
 <script setup>
 import { ref, onMounted, computed } from "vue"
 import { useRouter } from "vue-router"
+import { useNotificationsStore } from '../../stores/notifications'
 
 const router = useRouter()
+const notificationsStore = useNotificationsStore()
 
 const playlists = ref([])
 const loading = ref(true)
@@ -82,7 +84,7 @@ async function fetchPlaylists() {
     const res = await fetch(`${API_BASE}/users/${userId}/playlists`) 
     playlists.value = await res.json()
   } catch (err) {
-    error.value = "Erro ao conectar: " + err.message
+    notificationsStore.enviarNotificacao('Erro ao carregar playlists.', 'erro')
   } finally {
     loading.value = false
   }
@@ -107,15 +109,16 @@ async function onSubmit() {
 
     if (res.ok) {
       const novaPlaylist = await res.json()
-      novaPlaylist.song_count = 0 
+      novaPlaylist.song_count = 0
       playlists.value.unshift(novaPlaylist)
       nome.value = ''
       showForm.value = false
+      notificationsStore.enviarNotificacao('Playlist criada com sucesso!', 'sucesso')
     } else {
-      alert("Erro ao criar playlist")
+      notificationsStore.enviarNotificacao('Erro ao criar playlist.', 'erro')
     }
   } catch (err) {
-    alert("Erro na requisição: " + err.message)
+    notificationsStore.enviarNotificacao('Erro na requisição: ' + err.message, 'erro')
   } finally {
     isSubmitting.value = false
   }

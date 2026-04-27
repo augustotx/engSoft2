@@ -8,10 +8,6 @@
       <div class="spinner-border text-primary"></div>
     </div>
 
-    <div v-else-if="error" class="alert alert-danger">
-      {{ error }}
-    </div>
-
     <div v-else-if="playlist">
       <div class="mb-4">
         <h1 class="display-5 text-primary">{{ playlist.name }}</h1>
@@ -46,30 +42,30 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useNotificationsStore } from '../../stores/notifications'
 
 const route = useRoute()
 const router = useRouter()
+const notificationsStore = useNotificationsStore()
 
 const playlist = ref(null)
 const loading = ref(true)
-const error = ref(null)
 
 const API_BASE = 'http://127.0.0.1:3000/api'
 
 async function fetchPlaylistDetails() {
   loading.value = true
-  error.value = null
   try {
     const id = route.params.id
     const res = await fetch(`${API_BASE}/playlists/${id}`)
-    
+
     if (!res.ok) {
       throw new Error('Falha ao carregar a playlist.')
     }
-    
+
     playlist.value = await res.json()
   } catch (err) {
-    error.value = "Erro: " + err.message
+    notificationsStore.enviarNotificacao('Erro ao carregar a playlist.', 'erro')
   } finally {
     loading.value = false
   }
