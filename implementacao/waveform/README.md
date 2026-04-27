@@ -264,8 +264,10 @@ Eu (Augusto) deixei o init.sql na raiz do projeto, então ele já é rodado auto
 
 Para limpar o banco de dados tem que rodar os seguintes comandos:
 
+```bash
 docker compose down -v   
 docker rmi waveform-postgres 
+```
 
 ### Scripts nas pasta backend para adicionar novos artistas, albuns e músicas na DB:
 
