@@ -262,6 +262,11 @@ docker exec -it postgres-custom psql -U fei -d maindb -f /create_users.sql
 
 Eu (Augusto) deixei o init.sql na raiz do projeto, então ele já é rodado automaticamente quando o container é criado, mas para adicionar mais dados depois disso, é necessário seguir os passos acima. Eu deixei um exemplo de arquivo de inserção de dados dentro da pasta `sql` do backend, para servir como modelo (adiciona um artista, um álbum e nove músicas).
 
+Para limpar o banco de dados tem que rodar os seguintes comandos:
+
+docker compose down -v   
+docker rmi waveform-postgres 
+
 ### Scripts nas pasta backend para adicionar novos artistas, albuns e músicas na DB:
 
 #### Artista
