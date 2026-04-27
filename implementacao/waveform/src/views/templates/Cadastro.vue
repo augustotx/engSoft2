@@ -39,7 +39,7 @@ const handleNormalLogin = async () => {
   errorMsg.value = ''
 
   try {
-    const res = await fetch('http://localhost:3000/api/auth/login', {
+    const res = await fetch('http://localhost:3000/api/auth/signin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -165,13 +165,6 @@ const handleLoginError = () => {
             <input v-model="name" type="text" id="name" class="form-control form-control-lg"
               placeholder="seu nome completo">
             <div class="form-text" v-if="mostrarDicaUsername">Seu nome completo.</div>
-          </div>
-
-          <!-- BIO -->
-          <div class="w-100 mb-4">
-            <label for="bio" class="form-label text-secondary small fw-bold">BIO</label>
-            <input v-model="bio" type="text" id="bio" class="form-control form-control-lg"
-              placeholder="bio">
           </div>
           <!-- Email -->
           <div class="w-100 mb-4">

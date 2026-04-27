@@ -5,7 +5,12 @@
 -- Tabela de artistas
 CREATE TABLE IF NOT EXISTS artists (
     id SERIAL PRIMARY KEY,
+    google_id   VARCHAR(255),   -- "sub" do token JWT do Google (identificador permanente)
     name VARCHAR(255) NOT NULL,
+    email       VARCHAR(255) NOT NULL UNIQUE,   -- e-mail vindo do Google
+    password    VARCHAR(255),                   -- senha do usuario (varchar hihi)
+    username    VARCHAR(100) UNIQUE,            -- nome de usuário escolhido no cadastro
+    created_at  TIMESTAMP DEFAULT NOW(),
     bio TEXT,
     picture_path VARCHAR(500) -- caminho para a imagem do artista (opcional)
 );
@@ -35,7 +40,7 @@ CREATE TABLE IF NOT EXISTS users (
     email       VARCHAR(255) NOT NULL UNIQUE,   -- e-mail vindo do Google
     name        VARCHAR(255),                   -- nome completo vindo do Google
     password    VARCHAR(255),                   -- senha do usuario (varchar hihi)
-    picture_url VARCHAR(500),                   -- URL do avatar do Google
+    picture_path VARCHAR(500),                   -- URL do avatar do Google
     username    VARCHAR(100) UNIQUE,            -- nome de usuário escolhido no cadastro
     created_at  TIMESTAMP DEFAULT NOW()
 );

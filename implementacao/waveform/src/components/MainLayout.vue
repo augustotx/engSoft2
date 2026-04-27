@@ -21,7 +21,7 @@ const notificationsStore = useNotificationsStore();
       <router-link class="navbar-brand" to="/musicas">Catálogo</router-link>
       <router-link class="navbar-brand" to="/artistas">Artistas</router-link>
       <router-link class="navbar-brand" to="/playlists">Playlists</router-link>
-      <router-link class="navbar-brand" to="/ouvinte/login">Login</router-link>
+      <router-link class="navbar-brand" to="/ouvinte/login"></router-link>
     </div>
   </div>
   <div class="navbar navbar-expand-lg d-flex d-lg-none">
@@ -31,7 +31,7 @@ const notificationsStore = useNotificationsStore();
       <router-link class="navbar-brand fs-6" to="/musicas">Catálogo</router-link>
       <router-link class="navbar-brand fs-6" to="/artistas">Artistas</router-link>
       <router-link class="navbar-brand fs-6" to="/playlists">Playlists</router-link>
-      <router-link class="navbar-brand fs-6" to="/ouvinte/login">Login</router-link>
+      <router-link class="navbar-brand fs-6" to="/ouvinte/login"></router-link>
     </div>
   </div>
   <!-- NAVBAR END -->

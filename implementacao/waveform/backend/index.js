@@ -8,7 +8,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors({origin: 'http://localhost:5173'})); // Adjust the origin as needed
+app.use(cors({ origin: 'http://localhost:5173' })); // Adjust the origin as needed
 app.use('/musicas', express.static('musicas'))
 app.use('/imagens', express.static('imagens'))
 app.use(express.json());
@@ -119,10 +119,10 @@ app.post('/api/auth/google', async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    const google_id  = payload['sub'];
-    const email      = payload['email'];
-    const name       = payload['name'];
-    const picture    = payload['picture'];
+    const google_id = payload['sub'];
+    const email = payload['email'];
+    const name = payload['name'];
+    const picture = payload['picture'];
 
     const existing = await pool.query(
       'SELECT * FROM users WHERE google_id = $1',
@@ -140,20 +140,20 @@ app.post('/api/auth/google', async (req, res) => {
     const status = role === 'artist' ? 'pending' : 'approved';
 
     const result = await pool.query(
-     `INSERT INTO users (google_id, email, name, picture_url, username, role, status)
+      `INSERT INTO users (google_id, email, name, picture_url, username, role, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
-     [google_id, email, name, picture, username, role, status]
+      [google_id, email, name, picture, username, role, status]
     );
 
     // Se for artista, salva bio e imagem na tabela artists
     if (role === 'artist') {
-     const { bio, picture_path } = req.body;
-     await pool.query(
-      `INSERT INTO artists (name, bio, picture_path, user_id)
+      const { bio, picture_path } = req.body;
+      await pool.query(
+        `INSERT INTO artists (name, bio, picture_path, user_id)
        VALUES ($1, $2, $3, $4)`,
-      [name, bio || null, picture_path || null, result.rows[0].id]
-     );
+        [name, bio || null, picture_path || null, result.rows[0].id]
+      );
     }
     return res.status(201).json({ user: result.rows[0], created: true });
 
@@ -167,8 +167,8 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
-  const { email, username, password, name } = req.body;
+app.post('/api/auth/signin', async (req, res) => {
+  const { email, username, password, name, bio, picture_path } = req.body;
 
   if (!password || !email || !username || !name) {
     return res.status(400).json({
@@ -177,27 +177,81 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   try {
-    const sql = `
-      INSERT INTO users ( email, username, password, name)
-      VALUES ($1, $2, $3, $4)
-      RETURNING email, username, password;
-    `;
+    const { email, username, password, name, bio, picture_path } = req.body;
 
-    const valores = [email, username, password, name];
+    const sql = `
+      INSERT INTO artists (email, username, password, name, bio, picture_path)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING email, username, name, bio, picture_path;
+      `;
+
+    const valores = [email, username, password, name, bio, picture_path];
 
     const result = await pool.query(sql, valores);
 
     res.status(201).json({
-      message: 'Usuario criado com sucesso',
+      message: 'Artista criado com sucesso',
       user: result.rows[0]
     });
 
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({
-        error: 'Usuario ja existe'
+        error: 'Artista ja existe'
       });
     }
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      error: 'Email e senha são obrigatórios'
+    });
+  }
+
+  try {
+    const sql = `
+      SELECT id, email, username, name, password, bio, picture_path
+      FROM artists
+      WHERE email = $1
+    `;
+
+    const result = await pool.query(sql, [email]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        error: 'Credenciais inválidas'
+      });
+    }
+
+    const user = result.rows[0];
+
+    if (password !== user.password) {
+      return res.status(401).json({
+        error: 'Credenciais inválidas'
+      });
+    }
+
+    res.status(200).json({
+      message: 'Login realizado com sucesso',
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: user.name,
+        bio: user.bio,
+        picture_path: user.picture_path
+      }
+    });
+
+  } catch (err) {
+    console.error('ERRO LOGIN:', err);
     res.status(500).json({
       error: err.message
     });
@@ -254,8 +308,8 @@ app.post('/api/playlists/:playlistId/songs', async (req, res) => {
   } catch (err) {
     console.error(err);
     // Erro 23505 no Postgres significa que tentou inserir um dado duplicado (chave primária)
-    if (err.code === '23505') { 
-       return res.status(409).json({ error: 'Esta música já está na playlist.' });
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Esta música já está na playlist.' });
     }
     res.status(500).json({ error: 'Erro ao adicionar música na playlist' });
   }
@@ -267,11 +321,11 @@ app.get('/api/playlists/:id', async (req, res) => {
   try {
     // Primeiro, busca os dados básicos da playlist
     const playlistResult = await pool.query('SELECT * FROM playlists WHERE id = $1', [id]);
-    
+
     if (playlistResult.rows.length === 0) {
       return res.status(404).json({ error: 'Playlist não encontrada' });
     }
-    
+
     const playlist = playlistResult.rows[0];
 
     // Depois, busca as músicas fazendo um JOIN com a tabela de relacionamento
