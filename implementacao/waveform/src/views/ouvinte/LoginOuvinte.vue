@@ -7,5 +7,6 @@ import LoginTemplate from '@/views/templates/Login.vue'
     titulo="Logar como Ouvinte"
     cadastro-link="/ouvinte/cadastro"
     redirect-to="/musicas"
+    role="users"
   />
 </template>

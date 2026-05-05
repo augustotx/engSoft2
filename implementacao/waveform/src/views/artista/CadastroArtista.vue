@@ -8,6 +8,6 @@ import CadastroCard from '@/views/templates/Cadastro.vue'
     login-link="/artista/login"
     redirect-to="/artista"
     :mostrarDicaUsername = "true"
-    :role="'artist'"
+    role="artists"
   />
 </template>

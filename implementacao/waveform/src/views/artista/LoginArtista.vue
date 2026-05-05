@@ -7,5 +7,6 @@ import LoginTemplate from '@/views/templates/Login.vue'
     titulo="Logar como Artista"
     cadastro-link="/artista/cadastro"
     redirect-to="/artista"
+    role="artists"
   />
 </template>

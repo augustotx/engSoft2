@@ -8,7 +8,10 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors({ origin: 'http://localhost:5173' })); // Adjust the origin as needed
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}))
 app.use('/musicas', express.static('musicas'))
 app.use('/imagens', express.static('imagens'))
 app.use(express.json());
@@ -26,6 +29,19 @@ const pool = new Pool({
 app.get('/', (req, res) => {
   res.send('Backend is running!');
 });
+
+const session = require('express-session')
+
+app.use(session({
+  secret: 'segredo_super_secreto',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 
+  }
+}))
 
 // Get all artists
 app.get('/api/artists', async (req, res) => {
@@ -168,38 +184,77 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 app.post('/api/auth/signin', async (req, res) => {
-  const { email, username, password, name, bio, picture_path } = req.body;
+  const { email, username, password, name, bio, picture_path, role } = req.body;
 
-  if (!password || !email || !username || !name) {
+  if (!email || !username || !password || !name || !role) {
     return res.status(400).json({
-      error: 'Dados incompletos ou invalidos'
+      error: 'Dados incompletos ou inválidos'
+    });
+  }
+
+  if (role !== 'artists' && role !== 'users') {
+    return res.status(400).json({
+      error: 'Role inválida'
     });
   }
 
   try {
-    const { email, username, password, name, bio, picture_path } = req.body;
+    let sql;
+    let valores;
+    let result;
 
-    const sql = `
-      INSERT INTO artists (email, username, password, name, bio, picture_path)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING email, username, name, bio, picture_path;
+    if (role === 'artists') {
+      sql = `
+        INSERT INTO artists (email, username, password, name, bio, picture_path)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, email, username, name, bio, picture_path;
       `;
 
-    const valores = [email, username, password, name, bio, picture_path];
+      valores = [
+        email,
+        username,
+        password,
+        name,
+        bio || null,
+        picture_path || null
+      ];
+    }
 
-    const result = await pool.query(sql, valores);
+    else if (role === 'users') {
+      sql = `
+        INSERT INTO users (email, username, password, name, picture_path)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, email, username, name, picture_path;
+      `;
+
+      valores = [
+        email,
+        username,
+        password,
+        name,
+        picture_path || null
+      ];
+    }
+
+    result = await pool.query(sql, valores);
 
     res.status(201).json({
-      message: 'Artista criado com sucesso',
-      user: result.rows[0]
+      message: `${role === 'artists' ? 'Artista' : 'Usuário'} criado com sucesso`,
+      user: {
+        ...result.rows[0],
+        role
+      }
     });
 
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({
-        error: 'Artista ja existe'
+        error: 'Email ou username já existe'
       });
     }
+
+    console.error('ERRO SIGNIN:', err);
+
     res.status(500).json({
       error: err.message
     });
@@ -207,7 +262,7 @@ app.post('/api/auth/signin', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({
@@ -217,8 +272,8 @@ app.post('/api/auth/login', async (req, res) => {
 
   try {
     const sql = `
-      SELECT id, email, username, name, password, bio, picture_path
-      FROM artists
+      SELECT id, email, username, name, password, picture_path
+      FROM ${role}
       WHERE email = $1
     `;
 
@@ -238,16 +293,18 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
+    req.session.user = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role
+    };
+
+    console.log('SESSION:', req.session.user);
+
     res.status(200).json({
       message: 'Login realizado com sucesso',
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        bio: user.bio,
-        picture_path: user.picture_path
-      }
+      user: req.session.user
     });
 
   } catch (err) {
@@ -384,4 +441,18 @@ app.patch('/api/admin/artists/:userId/status', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar status.' });
   }
+});
+
+// Checkar sessao
+app.get('/api/auth/me', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({
+      error: 'Não autenticado'
+    });
+  }
+
+  res.json({
+    user: req.session.user,
+    role: req.session.role
+  });
 });

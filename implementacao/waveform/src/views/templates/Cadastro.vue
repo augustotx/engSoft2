@@ -12,7 +12,7 @@ const props = defineProps<{
   titulo: string
   loginLink: string
   redirectTo: string
-  role: 'listener' | 'artist'   // novo: quem está cadastrando
+  role: 'users' | 'artists'   
   mostrarDicaUsername?: boolean
 }>()
 
@@ -49,6 +49,7 @@ const handleNormalLogin = async () => {
         name: name.value,
         bio: bio.value || null,
         picture_path: picturePath.value || null,
+        role : props.role
       })
     })
 
@@ -81,7 +82,6 @@ const handleLoginGoogle = async (response: CredentialResponse) => {
   errorMsg.value = ''
 
   try {
-    // Envia o token do Google + dados do cadastro para o backend
     const res = await fetch('http://localhost:3000/api/auth/google', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -100,10 +100,8 @@ const handleLoginGoogle = async (response: CredentialResponse) => {
       return
     }
 
-    // Salva o usuário na sessionStorage para uso na sessão
     sessionStorage.setItem('user', JSON.stringify(data.user))
 
-    // Artista vai para tela de aguardo; ouvinte redireciona normalmente
     if (props.role === 'artist') {
       cadastrado.value = true
     } else {
@@ -200,7 +198,7 @@ const handleLoginError = () => {
           </div>
 
           <button class="btn btn-primary w-100" @click="handleNormalLogin">
-            Entrar
+            Cadastrar
           </button>
 
           <p v-if="loading" class="text-secondary small">Cadastrando...</p>

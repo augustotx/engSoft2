@@ -1,6 +1,14 @@
 <script setup>
+import { onMounted } from 'vue'
 import { useNotificationsStore } from './stores/notifications'
+import { useAuthStore } from './stores/auth'
+
 const notificationsStore = useNotificationsStore()
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.checkSession()
+})
 </script>
 
 <template>

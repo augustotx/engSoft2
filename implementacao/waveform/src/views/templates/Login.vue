@@ -7,12 +7,12 @@ import { useNotificationsStore } from '../../stores/notifications'
 
 
 const is_engsoft = import.meta.env.VITE_IS_ENGSOFT
-console.log(is_engsoft)
 
 const props = defineProps<{
   titulo: string
   cadastroLink: string
   redirectTo: string
+  role: 'artists' | 'users'
 }>()
 
 const router = useRouter()
@@ -33,13 +33,14 @@ const handleLoginError = () => {
 const handleLoginEmail = async () => {
   try {
     loading.value = true
-
     const response = await fetch('http://localhost:3000/api/auth/login', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: email.value,
-        password: password.value
+        password: password.value,
+        role : props.role
       })
     })
 
