@@ -306,6 +306,14 @@ node AddUser.js <GOOGLE_ID> <EMAIL> <USERNAME> <ROLE> "NOME COMPLETO"
 node AddUser.js 1111111111 meuemail@gmail.com dev123 listener Joao da Silva
 ```
 
+### Sessão
+Para acessar os dados do usuário usamos o Auth.
+Se precisar adicionar mais informações à sessão, alterar o auth.js dentro de C:\Users\citta\Documents\Faculdade\Semestre 7\EngSoft\engSoft2\implementacao\waveform\src\stores\auth.js
+```bash
+Logado como {{ authStore.user.username }}
+```
+
+
 ## Sobre a Criação de Playlists
 
 Como não ainda não estamos salvando o estado do usuário (quem é que está logado) as playlists criadas são sempre vinculadas ao usuário de id 1
