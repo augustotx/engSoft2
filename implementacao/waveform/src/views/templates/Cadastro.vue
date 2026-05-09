@@ -12,7 +12,7 @@ const props = defineProps<{
   titulo: string
   loginLink: string
   redirectTo: string
-  role: 'users' | 'artists'   
+  role: 'users' | 'artists'
   mostrarDicaUsername?: boolean
 }>()
 
@@ -102,7 +102,7 @@ const handleLoginGoogle = async (response: CredentialResponse) => {
 
     sessionStorage.setItem('user', JSON.stringify(data.user))
 
-    if (props.role === 'artist') {
+    if (props.role === 'artists') {
       cadastrado.value = true
     } else {
       router.push(props.redirectTo)
