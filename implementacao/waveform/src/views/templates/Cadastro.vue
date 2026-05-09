@@ -38,7 +38,7 @@ const handleNormalLogin = async () => {
   loading.value = true
   errorMsg.value = ''
 
-  try {
+    try {
     const res = await fetch('http://localhost:3000/api/auth/signin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -88,6 +88,7 @@ const handleLoginGoogle = async (response: CredentialResponse) => {
       body: JSON.stringify({
         credential,
         username: username.value.trim(),
+        role: props.role,
         bio: bio.value.trim() || null,
         picture_path: picturePath.value.trim() || null,
       }),
@@ -178,7 +179,7 @@ const handleLoginError = () => {
           </div>
 
           <!-- Campos extras apenas para artistas -->
-          <template v-if="role === 'artist'">
+          <template v-if="role === 'artists'">
             <div class="w-100 mb-4">
               <label for="bio" class="form-label text-secondary small fw-bold">BIO</label>
               <textarea v-model="bio" id="bio" class="form-control" rows="3"
@@ -227,7 +228,7 @@ const handleLoginError = () => {
           </div>
 
           <!-- Campos extras apenas para artistas -->
-          <template v-if="role === 'artist'">
+          <template v-if="role === 'artists'">
             <div class="w-100 mb-4">
               <label for="bio" class="form-label text-secondary small fw-bold">BIO</label>
               <textarea v-model="bio" id="bio" class="form-control" rows="3"

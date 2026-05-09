@@ -54,18 +54,34 @@ app.get('/api/artists', async (req, res) => {
   }
 });
 
-// Get artist by ID
+// GET /api/artists - List all artists (with basic info)
+app.get('/api/artists', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, username, picture_path, bio, status, created_at FROM artists ORDER BY name'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar artistas.' });
+  }
+});
+
+// GET /api/artists/:id - Fetch complete artist profile
 app.get('/api/artists/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM artists WHERE id = $1', [id]);
+    const result = await pool.query(
+      'SELECT id, google_id, name, email, username, created_at, bio, picture_path, status FROM artists WHERE id = $1',
+      [id]
+    );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Artist not found' });
+      return res.status(404).json({ error: 'Artista não encontrado.' });
     }
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Erro ao buscar artista.' });
   }
 });
 
@@ -122,10 +138,16 @@ app.get('/api/songs', async (req, res) => {
 });
 
 app.post('/api/auth/google', async (req, res) => {
-  const { credential, username, role } = req.body;
+  const { credential, username, role, bio, picture_path } = req.body;
 
   if (!credential) {
     return res.status(400).json({ error: 'Token do Google não fornecido.' });
+  }
+  if (!username || !role) {
+    return res.status(400).json({ error: 'Nome de usuário e role são obrigatórios para novos usuários.' });
+  }
+  if (!['users', 'artists'].includes(role)) {
+    return res.status(400).json({ error: 'Role inválida. Deve ser "user" ou "artist".' });
   }
 
   try {
@@ -137,47 +159,52 @@ app.post('/api/auth/google', async (req, res) => {
     const payload = ticket.getPayload();
     const google_id = payload['sub'];
     const email = payload['email'];
-    const name = payload['name'];
+    const fullName = payload['name'];
     const picture = payload['picture'];
 
+    if (role === 'users') {
+      // Check if user already exists
+      const existing = await pool.query(
+        'SELECT * FROM users WHERE google_id = $1',
+        [google_id]
+      );
+      if (existing.rows.length > 0) {
+        return res.json({ user: existing.rows[0], role: 'users', created: false });
+      }
+
+      // Create new user
+      const result = await pool.query(
+        `INSERT INTO users (google_id, email, name, picture_path, username, status)
+         VALUES ($1, $2, $3, $4, $5, 'approved')
+         RETURNING *`,
+        [google_id, email, fullName, picture, username]
+      );
+      return res.status(201).json({ user: result.rows[0], role: 'users', created: true });
+    }
+
+    // role === 'artist'
+    // Check if artist already exists
     const existing = await pool.query(
-      'SELECT * FROM users WHERE google_id = $1',
+      'SELECT * FROM artists WHERE google_id = $1',
       [google_id]
     );
-
     if (existing.rows.length > 0) {
-      return res.json({ user: existing.rows[0], created: false });
+      return res.json({ user: existing.rows[0], role: 'artists', created: false });
     }
 
-    if (!username || !role) {
-      return res.status(400).json({ error: 'Username e role são obrigatórios no cadastro.' });
-    }
-
-    const status = role === 'artist' ? 'pending' : 'approved';
-
+    // Create new artist
     const result = await pool.query(
-      `INSERT INTO users (google_id, email, name, picture_url, username, role, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *`,
-      [google_id, email, name, picture, username, role, status]
+      `INSERT INTO artists (google_id, name, email, username, bio, picture_path)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [google_id, fullName, email, username, bio || null, picture_path || picture || null]
     );
-
-    // Se for artista, salva bio e imagem na tabela artists
-    if (role === 'artist') {
-      const { bio, picture_path } = req.body;
-      await pool.query(
-        `INSERT INTO artists (name, bio, picture_path, user_id)
-       VALUES ($1, $2, $3, $4)`,
-        [name, bio || null, picture_path || null, result.rows[0].id]
-      );
-    }
-    return res.status(201).json({ user: result.rows[0], created: true });
+    return res.status(201).json({ user: result.rows[0], role: 'artists', created: true });
 
   } catch (err) {
     console.error('Erro na autenticação Google:', err.message);
-
-    if (err.message.includes('duplicate key')) {
-      return res.status(409).json({ error: 'Username ou e-mail já está em uso.' });
+    if (err.code === '23505') { // unique violation
+      return res.status(409).json({ error: 'Username ou e‑mail já está em uso.' });
     }
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
@@ -407,12 +434,9 @@ app.get('/api/playlists/:id', async (req, res) => {
 app.get('/api/admin/artists/pending', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT u.id, u.name, u.email, u.username, u.created_at,
-             a.bio, a.picture_path
-      FROM users u
-      JOIN artists a ON a.user_id = u.id
-      WHERE u.role = 'artist' AND u.status = 'pending'
-      ORDER BY u.created_at ASC
+        SELECT a.* FROM artists a
+        WHERE a.status = 'pending'
+        ORDER BY a.created_at DESC
     `);
     res.json(result.rows);
   } catch (err) {
@@ -431,7 +455,7 @@ app.patch('/api/admin/artists/:userId/status', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `UPDATE users SET status = $1 WHERE id = $2 AND role = 'artist' RETURNING *`,
+      `UPDATE artists SET status = $1 WHERE id = $2 RETURNING *`,
       [status, userId]
     );
     if (result.rows.length === 0) {
@@ -455,4 +479,180 @@ app.get('/api/auth/me', (req, res) => {
     user: req.session.user,
     role: req.session.role
   });
+});
+
+// GET /api/users/:id - Pegar perfil do usuário por ID (incluindo dados de artista se for o caso)
+app.get('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // First, check if user exists
+    const userResult = await pool.query(
+      `SELECT id, email, name, username, picture_path, status, created_at
+       FROM users WHERE id = $1`,
+      [id]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const user = userResult.rows[0];
+
+    // If the user is an artist, also fetch artist-specific data
+    const artistResult = await pool.query(
+      `SELECT bio, picture_path as artist_picture, user_id
+       FROM artists WHERE user_id = $1`,
+      [id]
+    );
+    if (artistResult.rows.length > 0) {
+      user.bio = artistResult.rows[0].bio;
+      user.artist_picture = artistResult.rows[0].artist_picture;
+      user.role = 'artist';
+    } else {
+      user.role = 'user';
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar perfil' });
+  }
+});
+
+// PUT /api/users/:id - Atualizar perfil do usuário (name, username, password, picture_path)
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  let { name, username, password, picture_path } = req.body;
+
+  // Prevent email update (email is immutable)
+  if (req.body.email !== undefined) {
+    return res.status(400).json({ error: 'O e-mail não pode ser alterado.' });
+  }
+
+  // Normalize username (optional)
+  if (username !== undefined) {
+    username = username.trim().toLowerCase();
+    if (username.length < 3) {
+      return res.status(400).json({ error: 'Username deve ter pelo menos 3 caracteres.' });
+    }
+  }
+
+  // Build dynamic UPDATE query
+  const updateFields = [];
+  const values = [];
+  let idx = 1;
+
+  if (name !== undefined) {
+    updateFields.push(`name = $${idx++}`);
+    values.push(name);
+  }
+  if (username !== undefined) {
+    updateFields.push(`username = $${idx++}`);
+    values.push(username);
+  }
+  if (password !== undefined && password.trim() !== '') {
+    // In production, you should hash the password (e.g., bcrypt)
+    updateFields.push(`password = $${idx++}`);
+    values.push(password);
+  }
+  if (picture_path !== undefined) {
+    updateFields.push(`picture_path = $${idx++}`);
+    values.push(picture_path);
+  }
+
+  if (updateFields.length === 0) {
+    return res.status(400).json({ error: 'Nenhum campo para atualizar.' });
+  }
+
+  values.push(id);
+  const query = `
+    UPDATE users
+    SET ${updateFields.join(', ')}
+    WHERE id = $${idx}
+    RETURNING id, email, name, username, picture_path, status, created_at
+  `;
+
+  try {
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') { // unique_violation
+      return res.status(409).json({ error: 'Username já está em uso.' });
+    }
+    console.error('Erro ao atualizar usuário:', err);
+    res.status(500).json({ error: 'Erro interno ao atualizar perfil.' });
+  }
+});
+
+// PUT /api/artists/:id - Update artist profile
+app.put('/api/artists/:id', async (req, res) => {
+  const { id } = req.params;
+  let { name, username, password, picture_path, bio } = req.body;
+
+  // Prevent email change (email is immutable)
+  if (req.body.email !== undefined) {
+    return res.status(400).json({ error: 'O e-mail não pode ser alterado.' });
+  }
+
+  // Normalize username (optional)
+  if (username !== undefined) {
+    username = username.trim().toLowerCase();
+    if (username.length < 3) {
+      return res.status(400).json({ error: 'Username deve ter pelo menos 3 caracteres.' });
+    }
+  }
+
+  const updateFields = [];
+  const values = [];
+  let idx = 1;
+
+  if (name !== undefined) {
+    updateFields.push(`name = $${idx++}`);
+    values.push(name);
+  }
+  if (username !== undefined) {
+    updateFields.push(`username = $${idx++}`);
+    values.push(username);
+  }
+  if (password !== undefined && password.trim() !== '') {
+    // In production, hash the password (e.g., bcrypt)
+    updateFields.push(`password = $${idx++}`);
+    values.push(password);
+  }
+  if (picture_path !== undefined) {
+    updateFields.push(`picture_path = $${idx++}`);
+    values.push(picture_path);
+  }
+  if (bio !== undefined) {
+    updateFields.push(`bio = $${idx++}`);
+    values.push(bio);
+  }
+
+  if (updateFields.length === 0) {
+    return res.status(400).json({ error: 'Nenhum campo para atualizar.' });
+  }
+
+  values.push(id);
+  const query = `
+    UPDATE artists
+    SET ${updateFields.join(', ')}
+    WHERE id = $${idx}
+    RETURNING id, email, name, username, created_at, bio, picture_path, status
+  `;
+
+  try {
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Artista não encontrado.' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') { // unique violation
+      return res.status(409).json({ error: 'Username ou e-mail já está em uso.' });
+    }
+    console.error('Erro ao atualizar artista:', err);
+    res.status(500).json({ error: 'Erro interno ao atualizar perfil.' });
+  }
 });

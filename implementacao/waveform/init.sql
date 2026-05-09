@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS artists (
     username    VARCHAR(100) UNIQUE,            -- nome de usuário escolhido no cadastro
     created_at  TIMESTAMP DEFAULT NOW(),
     bio TEXT,
-    picture_path VARCHAR(500) -- caminho para a imagem do artista (opcional)
+    picture_path VARCHAR(500), -- caminho para a imagem do artista (opcional)
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected'))
 );
 
 -- Tabela de álbuns
@@ -64,11 +65,6 @@ CREATE TABLE IF NOT EXISTS playlist_songs (
     added_at    TIMESTAMP DEFAULT NOW(),
     PRIMARY KEY (playlist_id, song_id) 
 );
-
-ALTER TABLE artists
-    ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
-
-CREATE INDEX IF NOT EXISTS idx_artists_user_id ON artists(user_id);
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pending'
