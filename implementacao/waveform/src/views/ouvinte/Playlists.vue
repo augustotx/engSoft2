@@ -69,7 +69,6 @@ const notificationsStore = useNotificationsStore()
 
 const playlists = ref([])
 const loading = ref(true)
-const error = ref(null)
 const searchText = ref("")
 const showForm = ref(false)
 const nome = ref('')
@@ -92,33 +91,23 @@ async function fetchPlaylists() {
 
 async function onSubmit() {
   if (!nome.value) return
-  
   isSubmitting.value = true
-  
   try {
     const res = await fetch(`${API_BASE}/playlists`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: nome.value,
-        user_id: userId
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nome.value, user_id: userId })
     })
-
     if (res.ok) {
       const novaPlaylist = await res.json()
       novaPlaylist.song_count = 0
       playlists.value.unshift(novaPlaylist)
       nome.value = ''
       showForm.value = false
-      notificationsStore.enviarNotificacao('Playlist criada com sucesso!', 'sucesso')
-    } else {
-      notificationsStore.enviarNotificacao('Erro ao criar playlist.', 'erro')
+      notificationsStore.enviarNotificacao('Playlist criada!', 'sucesso')
     }
   } catch (err) {
-    notificationsStore.enviarNotificacao('Erro na requisição: ' + err.message, 'erro')
+    notificationsStore.enviarNotificacao('Erro ao criar.', 'erro')
   } finally {
     isSubmitting.value = false
   }
@@ -138,13 +127,7 @@ onMounted(fetchPlaylists)
 </script>
 
 <style scoped>
-.clicavel {
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.clicavel:hover {
-  background-color: var(--surface2) !important; 
-  transform: translateY(-2px); 
-}
+.clicavel { cursor: pointer; transition: 0.2s ease; }
+.clicavel:hover { background-color: var(--surface2) !important; transform: translateY(-2px); }
+.card { background-color: var(--surface1) !important; color: var(--text); border: none; }
 </style>

@@ -364,12 +364,17 @@ app.post('/api/playlists', async (req, res) => {
   }
 });
 
-// 2. Buscar todas as playlists de um usuário específico
+// 2. Buscar todas as playlists de um usuário (COM CONTAGEM DE MÚSICAS)
 app.get('/api/users/:userId/playlists', async (req, res) => {
   const { userId } = req.params;
   try {
     const result = await pool.query(
-      'SELECT * FROM playlists WHERE user_id = $1 ORDER BY created_at DESC',
+      `SELECT p.*, COUNT(ps.song_id)::int as song_count
+       FROM playlists p
+       LEFT JOIN playlist_songs ps ON p.id = ps.playlist_id
+       WHERE p.user_id = $1
+       GROUP BY p.id
+       ORDER BY p.created_at DESC`,
       [userId]
     );
     res.json(result.rows);
@@ -379,19 +384,23 @@ app.get('/api/users/:userId/playlists', async (req, res) => {
   }
 });
 
-// 3. Adicionar uma música dentro de uma playlist
-app.post('/api/playlists/:playlistId/songs', async (req, res) => {
-  const { playlistId } = req.params;
-  const { song_id } = req.body;
+// 3. Adicionar uma música dentro de uma playlist (Rota Corrigida para /api/playlist_songs)
+app.post('/api/playlist_songs', async (req, res) => {
+  const { playlist_id, song_id } = req.body; // O Vue manda esses nomes
+
+  if (!playlist_id || !song_id) {
+    return res.status(400).json({ error: 'playlist_id e song_id são obrigatórios.' });
+  }
+
   try {
     await pool.query(
       'INSERT INTO playlist_songs (playlist_id, song_id) VALUES ($1, $2)',
-      [playlistId, song_id]
+      [playlist_id, song_id]
     );
     res.status(201).json({ message: 'Música adicionada à playlist com sucesso!' });
   } catch (err) {
     console.error(err);
-    // Erro 23505 no Postgres significa que tentou inserir um dado duplicado (chave primária)
+    // Erro 23505 = Chave duplicada (música já está lá)
     if (err.code === '23505') {
       return res.status(409).json({ error: 'Esta música já está na playlist.' });
     }
