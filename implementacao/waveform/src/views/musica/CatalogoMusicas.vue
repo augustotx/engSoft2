@@ -65,8 +65,6 @@ async function adicionarAFila(songPlaylistId) {
     })
 
     if (res.ok) {
-      notificationsStore.enviarNotificacao('Adicionado!', 'sucesso')
-      
       const playlistAfetada = playlists.value.find(p => p.id === songPlaylistId)
       if (playlistAfetada) {
         if (!playlistAfetada.songs) playlistAfetada.songs = []

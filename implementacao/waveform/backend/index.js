@@ -439,6 +439,31 @@ app.get('/api/playlists/:id', async (req, res) => {
   }
 });
 
+// Rota para remover uma música de uma playlist específica
+app.delete('/api/playlist_songs', async (req, res) => {
+  const { playlist_id, song_id } = req.body;
+
+  if (!playlist_id || !song_id) {
+    return res.status(400).json({ error: 'playlist_id e song_id são obrigatórios.' });
+  }
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2',
+      [playlist_id, song_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'A música já não estava nesta playlist.' });
+    }
+
+    res.json({ message: 'Música removida com sucesso!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao remover música da playlist.' });
+  }
+});
+
 // Listar artistas pendentes
 app.get('/api/admin/artists/pending', async (req, res) => {
   try {

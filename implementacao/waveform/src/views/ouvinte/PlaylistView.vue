@@ -22,7 +22,7 @@
         <div 
           v-for="(song, index) in playlist.songs" 
           :key="song.id"
-          class="card p-3 mb-2 d-flex flex-row justify-content-between align-items-center"
+          class="card p-3 mb-2 flex-row justify-content-between align-items-center"
         >
           <div>
             <span class="text-muted me-3">{{ index + 1 }}</span>
@@ -30,14 +30,25 @@
               {{ song.title }}
             </span>
           </div>
-          
-          <button class="btn btn-sm btn-primary" @click="tocarMusica(song)">
-             <i class="fa-solid" :class="playerStore.currentSongUrl?.includes(song.file_path) && playerStore.isPlaying ? 'fa-pause' : 'fa-play'"></i>
-          </button>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" @click="download(song)">
+              <i class="fa-solid fa-download"></i>
+            </button>
+
+            <!-- Botão de remover com a classe btn-remover -->
+            <button class="btn btn-sm btn-outline-secondary btn-remover" @click="removerMusica(song.id)" title="Remover música">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            
+            <button class="btn btn-sm btn-primary" @click="tocarMusica(song)">
+               <i class="fa-solid" :class="playerStore.currentSongUrl?.includes(song.file_path) && playerStore.isPlaying ? 'fa-pause' : 'fa-play'"></i>
+            </button>
+          </div>
         </div>
       </div>
       
-      <div v-else class="text-center text-muted mt-4 p-5 rounded bg-dark">
+      <div v-else class="text-center text-muted mt-4 p-5 rounded bg-secondary">
         Nenhuma música nesta playlist ainda.
       </div>
     </div>
@@ -93,9 +104,50 @@ function tocarMusica(song) {
   }
 }
 
+function download(song) {
+  const url = `${STATIC_BASE}/${song.file_path}`
+  window.open(url, '_blank')
+}
+
+// Remoção direta
+async function removerMusica(songId) {
+  try {
+    const res = await fetch(`${API_BASE}/playlist_songs`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playlist_id: route.params.id,
+        song_id: songId
+      })
+    });
+
+    if (res.ok) {
+      playlist.value.songs = playlist.value.songs.filter(s => s.id !== songId);
+    } else {
+      notificationsStore.enviarNotificacao('Erro ao remover música.', 'erro');
+    }
+  } catch (err) {
+    notificationsStore.enviarNotificacao('Erro de conexão.', 'erro');
+  }
+}
+
 onMounted(fetchPlaylistDetails)
 </script>
 
 <style scoped>
-.card { background-color: var(--surface1) !important; color: var(--text); border: none; }
+.card { 
+  background-color: var(--surface1) !important; 
+  color: var(--text); 
+  border: none; 
+}
+
+.btn-remover {
+  transition: all 0.3s ease;
+}
+
+.btn-remover:hover {
+  background-color: var(--red) !important;
+  border-color: var(--red) !important;
+  color: var(--base) !important; 
+}
 </style>
