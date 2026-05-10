@@ -50,6 +50,17 @@
             {{ playlist.song_count || 0 }} música(s)
           </small>
         </div>
+
+        <!-- Botão de remover conectado à lógica -->
+        <div class="d-flex gap-2">
+          <button 
+            class="btn btn-sm btn-outline-secondary btn-remover" 
+            title="Remover playlist"
+            @click.stop="removerPlaylist(playlist.id)"
+          >
+            <i class="fa-solid fa-minus"></i>
+          </button>
+        </div>
       </div>
       
       <div v-if="playlistsFiltradas.length === 0" class="text-center text-muted mt-4 p-4 rounded bg-secondary">
@@ -104,7 +115,6 @@ async function onSubmit() {
       playlists.value.unshift(novaPlaylist)
       nome.value = ''
       showForm.value = false
-      notificationsStore.enviarNotificacao('Playlist criada!', 'sucesso')
     }
   } catch (err) {
     notificationsStore.enviarNotificacao('Erro ao criar.', 'erro')
@@ -115,6 +125,23 @@ async function onSubmit() {
 
 function abrirPlaylist(id) {
   router.push(`/playlists/${id}`)
+}
+
+// Remoção direta sem confirmação
+async function removerPlaylist(id) {
+  try {
+    const res = await fetch(`${API_BASE}/playlists/${id}`, {
+      method: 'DELETE'
+    })
+    
+    if (res.ok) {
+      playlists.value = playlists.value.filter(p => p.id !== id)
+    } else {
+      notificationsStore.enviarNotificacao('Erro ao remover playlist.', 'erro')
+    }
+  } catch (err) {
+    notificationsStore.enviarNotificacao('Erro de conexão.', 'erro')
+  }
 }
 
 const playlistsFiltradas = computed(() => {
@@ -130,4 +157,14 @@ onMounted(fetchPlaylists)
 .clicavel { cursor: pointer; transition: 0.2s ease; }
 .clicavel:hover { background-color: var(--surface2) !important; transform: translateY(-2px); }
 .card { background-color: var(--surface1) !important; color: var(--text); border: none; }
+
+.btn-remover {
+  transition: all 0.3s ease;
+}
+
+.btn-remover:hover {
+  background-color: var(--red) !important;
+  border-color: var(--red) !important;
+  color: var(--base) !important;
+}
 </style>

@@ -345,6 +345,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
 });
+
 // ==========================================
 // ROTAS DE PLAYLISTS
 // ==========================================
@@ -463,6 +464,29 @@ app.delete('/api/playlist_songs', async (req, res) => {
     res.status(500).json({ error: 'Erro ao remover música da playlist.' });
   }
 });
+
+// Deletar uma playlist inteira
+app.delete('/api/playlists/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM playlists WHERE id = $1', [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Playlist não encontrada.' });
+    }
+
+    res.json({ message: 'Playlist deletada com sucesso!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao deletar playlist.' });
+  }
+});
+
+// ==========================================
+// FIM DAS ROTAS DE PLAYLISTS
+// ==========================================
+
 
 // Listar artistas pendentes
 app.get('/api/admin/artists/pending', async (req, res) => {
