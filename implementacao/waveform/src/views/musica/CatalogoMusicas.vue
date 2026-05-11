@@ -3,10 +3,10 @@ import { ref, onMounted, computed } from "vue"
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 import { useNotificationsStore } from '../../stores/notifications'
-import { useAuthStore } from '../../stores/auth'  // 👈 adicionado
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()  // 👈 instância do store
+const authStore = useAuthStore()
 
 const songs = ref([])
 const playlists = ref([])
@@ -22,7 +22,6 @@ const userId = computed(() => authStore.user?.id)
 const playerStore = usePlayerStore()
 const notificationsStore = useNotificationsStore()
 
-// 👈 Rota do perfil baseada na role do usuário logado
 const profileRoute = computed(() => {
   if (!authStore.user) return null
   return authStore.user.role === 'users' ? '/ouvinte/perfil' : '/artista/perfil'
@@ -38,8 +37,10 @@ async function fetchSongs() {
 }
 
 async function fetchUserPlaylists() {
+  if (!userId.value) return 
+
   try {
-    const res = await fetch(`${API_BASE}/users/${userId}/playlists`)
+    const res = await fetch(`${API_BASE}/users/${userId.value}/playlists`)
     const dados = await res.json()
     const playlistsComMusicas = await Promise.all(dados.map(async (p) => {
       const detalheRes = await fetch(`${API_BASE}/playlists/${p.id}`)
@@ -80,8 +81,6 @@ async function adicionarAFila(songPlaylistId) {
         if (!playlistAfetada.songs) playlistAfetada.songs = []
         playlistAfetada.songs.push({ id: selectedSong.value.id })
       }
-
-
     } else {
       notificationsStore.enviarNotificacao('Erro ao adicionar', 'erro')
     }
@@ -117,13 +116,12 @@ const audiosFiltrados = computed(() => {
 
 onMounted(() => {
   fetchSongs()
-  authStore.checkSession() // 👈 verifica sessão ao carregar a página
+  authStore.checkSession()
 })
 </script>
 
 <template>
   <div class="container mt-4">
-    <!-- Cabeçalho com título e botão de perfil -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="mb-0">Catálogo de Músicas</h1>
       <button v-if="authStore.user && profileRoute" class="btn btn-outline-primary" @click="router.push(profileRoute)">
@@ -131,7 +129,6 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Busca -->
     <div class="mb-4">
       <input type="text" class="form-control" v-model="searchText" placeholder="Buscar músicas..." />
     </div>
@@ -163,7 +160,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- MODAL -->
     <div v-if="showPlaylistModal" class="modal-overlay">
       <div class="modal-content card p-4 shadow-lg border-primary">
         <h5 class="text-center text-primary mb-3">Adicionar à Playlist</h5>
@@ -185,50 +181,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.card {
-  background-color: var(--surface1) !important;
-  color: var(--text);
-  border: none;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
-
-.modal-content {
-  width: 90%;
-  max-width: 380px;
-  background-color: var(--surface1) !important;
-  border: 1px solid var(--primary);
-}
-
-.playlist-btn {
-  background-color: var(--surface2) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border) !important;
-  padding: 12px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-
-.playlist-btn:hover {
-  background-color: var(--primary) !important;
-  color: white !important;
-  transform: translateY(-2px);
-}
-
-.custom-scroll {
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 5px;
-}
+.card { background-color: var(--surface1) !important; color: var(--text); border: none; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1050; }
+.modal-content { width: 90%; max-width: 380px; background-color: var(--surface1) !important; border: 1px solid var(--primary); }
+.playlist-btn { background-color: var(--surface2) !important; color: var(--text) !important; border: 1px solid var(--border) !important; padding: 12px; font-weight: bold; transition: all 0.2s ease; }
+.playlist-btn:hover { background-color: var(--primary) !important; color: white !important; transform: translateY(-2px); }
+.custom-scroll { max-height: 300px; overflow-y: auto; padding-right: 5px; }
 </style>

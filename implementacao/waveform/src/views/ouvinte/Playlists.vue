@@ -1,4 +1,5 @@
 <template>
+
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <button class="btn btn-primary" @click="showForm = true" v-if="!showForm">
@@ -51,7 +52,6 @@
           </small>
         </div>
 
-        <!-- Botão de remover conectado à lógica -->
         <div class="d-flex gap-2">
           <button 
             class="btn btn-sm btn-outline-secondary btn-remover" 
@@ -91,9 +91,15 @@ const API_BASE = 'http://127.0.0.1:3000/api'
 const userId = computed(() => authStore.user?.id)
 
 async function fetchPlaylists() {
+  if (!userId.value) { // 👈 Trava de segurança
+    loading.value = false
+    return
+  }
+
   loading.value = true
   try {
-    const res = await fetch(`${API_BASE}/users/${userId}/playlists`) 
+    // 👈 Usando .value aqui
+    const res = await fetch(`${API_BASE}/users/${userId.value}/playlists`) 
     playlists.value = await res.json()
   } catch (err) {
     notificationsStore.enviarNotificacao('Erro ao carregar playlists.', 'erro')
@@ -109,7 +115,8 @@ async function onSubmit() {
     const res = await fetch(`${API_BASE}/playlists`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: nome.value, user_id: userId })
+      // 👈 Usando .value aqui
+      body: JSON.stringify({ name: nome.value, user_id: userId.value })
     })
     if (res.ok) {
       const novaPlaylist = await res.json()
@@ -129,7 +136,6 @@ function abrirPlaylist(id) {
   router.push(`/playlists/${id}`)
 }
 
-// Remoção direta sem confirmação
 async function removerPlaylist(id) {
   try {
     const res = await fetch(`${API_BASE}/playlists/${id}`, {
@@ -152,21 +158,16 @@ const playlistsFiltradas = computed(() => {
   )
 })
 
-onMounted(fetchPlaylists)
+onMounted(async () => {
+  await authStore.checkSession()
+  fetchPlaylists()
+})
 </script>
 
 <style scoped>
 .clicavel { cursor: pointer; transition: 0.2s ease; }
 .clicavel:hover { background-color: var(--surface2) !important; transform: translateY(-2px); }
 .card { background-color: var(--surface1) !important; color: var(--text); border: none; }
-
-.btn-remover {
-  transition: all 0.3s ease;
-}
-
-.btn-remover:hover {
-  background-color: var(--red) !important;
-  border-color: var(--red) !important;
-  color: var(--base) !important;
-}
+.btn-remover { transition: all 0.3s ease; }
+.btn-remover:hover { background-color: var(--red) !important; border-color: var(--red) !important; color: var(--base) !important; }
 </style>

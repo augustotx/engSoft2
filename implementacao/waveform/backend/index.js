@@ -712,39 +712,26 @@ app.get('/api/auth/me', (req, res) => {
   });
 });
 
-// GET /api/users/:id - Pegar perfil do usuário por ID (incluindo dados de artista se for o caso)
+// GET /api/users/:id - Pegar perfil do usuário por ID
 app.get('/api/users/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    // First, check if user exists
     const userResult = await pool.query(
-      `SELECT id, email, name, username, picture_path, status, created_at
+      `SELECT id, email, name, username, picture_path, status, created_at, is_premium
        FROM users WHERE id = $1`,
       [id]
     );
+    
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     const user = userResult.rows[0];
-
-    // If the user is an artist, also fetch artist-specific data
-    const artistResult = await pool.query(
-      `SELECT bio, picture_path as artist_picture, user_id
-       FROM artists WHERE user_id = $1`,
-      [id]
-    );
-    if (artistResult.rows.length > 0) {
-      user.bio = artistResult.rows[0].bio;
-      user.artist_picture = artistResult.rows[0].artist_picture;
-      user.role = 'artist';
-    } else {
-      user.role = 'user';
-    }
+    user.role = 'users';
 
     res.json(user);
   } catch (err) {
-    console.error(err);
+    console.error('Erro ao buscar perfil do usuário:', err);
     res.status(500).json({ error: 'Erro ao buscar perfil' });
   }
 });
