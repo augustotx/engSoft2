@@ -79,3 +79,13 @@ CREATE INDEX IF NOT EXISTS idx_users_email     ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username  ON users(username);
 CREATE INDEX IF NOT EXISTS idx_playlists_user_id ON playlists(user_id);
 CREATE INDEX IF NOT EXISTS idx_playlist_songs_order ON playlist_songs(playlist_id, added_at);
+
+-- Tabela de streams
+CREATE TABLE IF NOT EXISTS streams (
+    id        SERIAL PRIMARY KEY,
+    song_id   INTEGER NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+    played_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_streams_song_id   ON streams(song_id);
+CREATE INDEX IF NOT EXISTS idx_streams_played_at ON streams(song_id, played_at);

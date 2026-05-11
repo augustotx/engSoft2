@@ -17,7 +17,7 @@ const selectedSong = ref(null)
 
 const API_BASE = 'http://127.0.0.1:3000/api'
 const STATIC_BASE = 'http://127.0.0.1:3000'
-const userId = 1
+const userId = computed(() => authStore.user?.id)
 
 const playerStore = usePlayerStore()
 const notificationsStore = useNotificationsStore()
@@ -97,6 +97,7 @@ function handlePlay(song) {
     playerStore.isPlaying ? audio.pause() : audio.play()
     playerStore.isPlaying = !playerStore.isPlaying
   } else {
+    playerStore.setSongId(song.id)
     playerStore.setSongUrl(songUrl)
     playerStore.isPlaying = true
   }

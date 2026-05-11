@@ -717,6 +717,61 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
+// ==========================================
+// ROTAS DE STREAMS E PAGAMENTO
+// ==========================================
+
+// Registrar stream de uma música
+app.post('/api/songs/:id/stream', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const songResult = await pool.query('SELECT id FROM songs WHERE id = $1', [id]);
+    if (songResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Música não encontrada.' });
+    }
+
+    await pool.query('INSERT INTO streams (song_id) VALUES ($1)', [id]);
+    res.status(201).json({ registrado: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao registrar stream.' });
+  }
+});
+
+// Calcular pagamento do artista baseado nos streams do último mês
+app.get('/api/artists/:id/pagamento', async (req, res) => {
+  const { id } = req.params;
+  const VALOR_POR_STREAM = 0.005; // R$ 0,005 por stream
+
+  try {
+    const artistResult = await pool.query('SELECT id, name FROM artists WHERE id = $1', [id]);
+    if (artistResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Artista não encontrado.' });
+    }
+
+    const result = await pool.query(
+      `SELECT COUNT(*) FROM streams
+       JOIN songs ON streams.song_id = songs.id
+       WHERE songs.artist_id = $1
+       AND streams.played_at > NOW() - INTERVAL '1 month'`,
+      [id]
+    );
+
+    const totalStreams = parseInt(result.rows[0].count);
+    const pagamento = (totalStreams * VALOR_POR_STREAM).toFixed(2);
+
+    res.json({
+      artista: artistResult.rows[0].name,
+      streams_ultimo_mes: totalStreams,
+      valor_por_stream: VALOR_POR_STREAM,
+      pagamento_total: parseFloat(pagamento)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao calcular pagamento.' });
+  }
+});
+
 // PUT /api/artists/:id - Update artist profile
 app.put('/api/artists/:id', async (req, res) => {
   const { id } = req.params;

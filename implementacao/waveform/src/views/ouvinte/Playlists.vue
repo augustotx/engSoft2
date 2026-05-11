@@ -74,9 +74,11 @@
 import { ref, onMounted, computed } from "vue"
 import { useRouter } from "vue-router"
 import { useNotificationsStore } from '../../stores/notifications'
+import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const notificationsStore = useNotificationsStore()
+const authStore = useAuthStore()
 
 const playlists = ref([])
 const loading = ref(true)
@@ -86,7 +88,7 @@ const nome = ref('')
 const isSubmitting = ref(false)
 
 const API_BASE = 'http://127.0.0.1:3000/api'
-const userId = 1
+const userId = computed(() => authStore.user?.id)
 
 async function fetchPlaylists() {
   loading.value = true

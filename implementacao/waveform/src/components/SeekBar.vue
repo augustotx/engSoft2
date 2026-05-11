@@ -100,6 +100,19 @@
 // Vcs vão perceber que tem algumas variáveis não utilizadas. Eu deixei elas pra compatiblidade, mas não sei se é necessário. Dps a gente testa
 // ~augusto
 import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
+import { usePlayerStore } from '../stores/player'
+
+const playerStore = usePlayerStore()
+const API_BASE = 'http://localhost:3000/api'
+
+async function registrarStream(songId) {
+  if (!songId) return
+  try {
+    await fetch(`${API_BASE}/songs/${songId}/stream`, { method: 'POST' })
+  } catch (err) {
+    console.error('Erro ao registrar stream:', err)
+  }
+}
 
 const props = defineProps({
   // Arquivo dado pelo usuário (e.g., via input type="file")
@@ -315,6 +328,7 @@ async function loadFromUrl(url) {
       audio.play().catch(err => console.error('Playback failed:', err))
       isPlaying.value = true
       audio.removeEventListener('canplay', onCanPlay)
+      registrarStream(playerStore.currentSongId)
     }
     audio.addEventListener('canplay', onCanPlay)
 
