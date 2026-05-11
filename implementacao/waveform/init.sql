@@ -58,11 +58,12 @@ CREATE TABLE IF NOT EXISTS playlists (
     updated_at        TIMESTAMP DEFAULT NOW()
 );
 
--- Tabela intermediária (N:N)
+-- Tabela intermediária (N:N) COM A COLUNA ORDEM
 CREATE TABLE IF NOT EXISTS playlist_songs (
     playlist_id INTEGER NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
     song_id     INTEGER NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
     added_at    TIMESTAMP DEFAULT NOW(),
+    ordem       INTEGER DEFAULT 0,
     PRIMARY KEY (playlist_id, song_id) 
 );
 

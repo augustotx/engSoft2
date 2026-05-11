@@ -19,33 +19,43 @@
       <h3 class="mb-3">Músicas</h3>
       
       <div v-if="playlist.songs && playlist.songs.length > 0">
-        <div 
-          v-for="(song, index) in playlist.songs" 
-          :key="song.id"
-          class="card p-3 mb-2 flex-row justify-content-between align-items-center"
+        <!-- Componente Draggable envolvendo as músicas -->
+        <draggable 
+          v-model="playlist.songs" 
+          item-key="id"
+          @end="salvarNovaOrdem"
+          animation="200"
+          handle=".drag-handle"
         >
-          <div>
-            <span class="text-muted me-3">{{ index + 1 }}</span>
-            <span :class="{ 'fw-bold text-primary': playerStore.currentSongUrl?.includes(song.file_path) }">
-              {{ song.title }}
-            </span>
-          </div>
+          <template #item="{ element: song, index }">
+            <div class="card p-3 mb-2 flex-row justify-content-between align-items-center">
+              
+              <div class="d-flex align-items-center">
+                <!-- Ícone para arrastar -->
+                <i class="fa-solid fa-grip-vertical text-muted me-3 drag-handle fs-5" title="Arraste para reordenar"></i>
+                
+                <span class="text-muted me-3" style="min-width: 20px;">{{ index + 1 }}</span>
+                <span :class="{ 'fw-bold text-primary': playerStore.currentSongUrl?.includes(song.file_path) }">
+                  {{ song.title }}
+                </span>
+              </div>
 
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-secondary" @click="download(song)">
-              <i class="fa-solid fa-download"></i>
-            </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" @click="download(song)">
+                  <i class="fa-solid fa-download"></i>
+                </button>
 
-            <!-- Botão de remover com a classe btn-remover -->
-            <button class="btn btn-sm btn-outline-secondary btn-remover" @click="removerMusica(song.id)" title="Remover música">
-              <i class="fa-solid fa-minus"></i>
-            </button>
-            
-            <button class="btn btn-sm btn-primary" @click="tocarMusica(song)">
-               <i class="fa-solid" :class="playerStore.currentSongUrl?.includes(song.file_path) && playerStore.isPlaying ? 'fa-pause' : 'fa-play'"></i>
-            </button>
-          </div>
-        </div>
+                <button class="btn btn-sm btn-outline-secondary btn-remover" @click="removerMusica(song.id)" title="Remover música">
+                  <i class="fa-solid fa-minus"></i>
+                </button>
+                
+                <button class="btn btn-sm btn-primary" @click="tocarMusica(song)">
+                   <i class="fa-solid" :class="playerStore.currentSongUrl?.includes(song.file_path) && playerStore.isPlaying ? 'fa-pause' : 'fa-play'"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+        </draggable>
       </div>
       
       <div v-else class="text-center text-muted mt-4 p-5 rounded bg-secondary">
@@ -60,6 +70,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationsStore } from '../../stores/notifications'
 import { usePlayerStore } from '@/stores/player'
+import draggable from 'vuedraggable' // 👈 Importação do Draggable
 
 const route = useRoute()
 const router = useRouter()
@@ -86,6 +97,21 @@ async function fetchPlaylistDetails() {
   }
 }
 
+// 👈 Nova função para avisar o Back-end da nova ordem
+async function salvarNovaOrdem() {
+  const novaOrdemIds = playlist.value.songs.map(song => song.id);
+
+  try {
+    await fetch(`${API_BASE}/playlists/${route.params.id}/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ novaOrdem: novaOrdemIds })
+    });
+  } catch (err) {
+    notificationsStore.enviarNotificacao('Erro ao salvar nova ordem.', 'erro');
+  }
+}
+
 function tocarMusica(song) {
   const songUrl = `${STATIC_BASE}/${song.file_path}`
   const audioFisico = document.querySelector('audio')
@@ -109,7 +135,6 @@ function download(song) {
   window.open(url, '_blank')
 }
 
-// Remoção direta
 async function removerMusica(songId) {
   try {
     const res = await fetch(`${API_BASE}/playlist_songs`, {
@@ -149,5 +174,19 @@ onMounted(fetchPlaylistDetails)
   background-color: var(--red) !important;
   border-color: var(--red) !important;
   color: var(--base) !important; 
+}
+
+/* Cursor especial para o ícone de arrastar */
+.drag-handle {
+  cursor: grab;
+  transition: color 0.2s;
+}
+
+.drag-handle:hover {
+  color: var(--primary) !important;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 </style>

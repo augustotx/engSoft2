@@ -570,11 +570,10 @@ app.post('/api/playlist_songs', async (req, res) => {
   }
 });
 
-// 4. Buscar uma playlist específica COM as músicas dentro dela
+// 4. Buscar uma playlist específica COM as músicas dentro dela (ATUALIZADA)
 app.get('/api/playlists/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    // Primeiro, busca os dados básicos da playlist
     const playlistResult = await pool.query('SELECT * FROM playlists WHERE id = $1', [id]);
 
     if (playlistResult.rows.length === 0) {
@@ -583,21 +582,40 @@ app.get('/api/playlists/:id', async (req, res) => {
 
     const playlist = playlistResult.rows[0];
 
-    // Depois, busca as músicas fazendo um JOIN com a tabela de relacionamento
     const songsResult = await pool.query(`
       SELECT songs.* FROM songs 
       JOIN playlist_songs ON songs.id = playlist_songs.song_id
       WHERE playlist_songs.playlist_id = $1
-      ORDER BY playlist_songs.added_at ASC
+      ORDER BY playlist_songs.ordem ASC, playlist_songs.added_at ASC
     `, [id]);
 
-    // Junta as músicas dentro do objeto da playlist e envia pro frontend
     playlist.songs = songsResult.rows;
     res.json(playlist);
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao buscar detalhes da playlist' });
+  }
+});
+
+// 5. Atualizar ordem das músicas na playlist (NOVA ROTA)
+app.put('/api/playlists/:id/reorder', async (req, res) => {
+  const { id } = req.params;
+  const { novaOrdem } = req.body; 
+
+  try {
+    const promises = novaOrdem.map((songId, index) => {
+      return pool.query(
+        'UPDATE playlist_songs SET ordem = $1 WHERE playlist_id = $2 AND song_id = $3',
+        [index, id, songId]
+      );
+    });
+
+    await Promise.all(promises);
+    res.json({ message: 'Ordem atualizada com sucesso!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao reordenar playlist.' });
   }
 });
 
