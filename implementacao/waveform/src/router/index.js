@@ -25,7 +25,7 @@ const routes = [
     { path: "/ouvinte/cadastro", component: RegisterListener },
     { path: "/artista/login", component: LoginArtist },
     { path: "/artista/cadastro", component: RegisterArtist },
-    { path: "/admin/artistas", component: AdminArtistas, meta: { requiresAuth: true} },
+    { path: "/admin/artistas", component: AdminArtistas},
     {
         path: "/", component: MainLayout,
         children: [

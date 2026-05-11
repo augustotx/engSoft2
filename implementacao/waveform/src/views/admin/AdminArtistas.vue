@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-// 1. Correção do TypeScript (adicionado <any[]>)
 const artistas = ref<any[]>([])
 const mensagem = ref('')
 
@@ -37,7 +36,7 @@ const atualizarStatus = async (userId: number, status: string) => {
   }
 }
 
-// 2. Helper para exibir a imagem corretamente (local ou URL externa do Google)
+// Helper para exibir a imagem corretamente (local ou URL externa do Google)
 const getImageUrl = (path: string) => {
   if (path.startsWith('http')) return path
   return `http://localhost:3000/${path}`
@@ -48,6 +47,12 @@ onMounted(buscarPendentes)
 
 <template>
   <div class="container py-5">
+    
+    <!-- Botão de Voltar para a Landing Page -->
+    <router-link to="/" class="btn btn-outline-secondary mb-4">
+      &larr; Voltar para o Início
+    </router-link>
+
     <h2 class="fw-bold mb-4">Artistas Pendentes</h2>
 
     <div v-if="mensagem" class="alert alert-info py-2 mb-4">{{ mensagem }}</div>
@@ -61,7 +66,6 @@ onMounted(buscarPendentes)
       <p class="text-secondary small mb-1">@{{ artista.username }} — {{ artista.email }}</p>
       <p class="mb-2" v-if="artista.bio">{{ artista.bio }}</p>
       
-      <!-- Usando a função getImageUrl para não quebrar imagens locais -->
       <img 
         v-if="artista.picture_path" 
         :src="getImageUrl(artista.picture_path)" 

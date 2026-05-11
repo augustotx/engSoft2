@@ -32,5 +32,19 @@ onMounted(() => {
     <div v-else class="mt-4">
       Não está logado
     </div>
+
+    <!-- Atalho para o Admin -->
+    <div class="mt-5">
+      <router-link to="/admin/artistas" class="text-secondary text-decoration-none small opacity-75 custom-hover">
+        <i class="fa-solid fa-lock me-1"></i> Entrar como Administrador
+      </router-link>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.custom-hover:hover {
+  text-decoration: underline !important;
+  opacity: 1 !important;
+}
+</style>
