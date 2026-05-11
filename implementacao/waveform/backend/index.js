@@ -143,12 +143,9 @@ app.post('/api/auth/google', async (req, res) => {
   if (!credential) {
     return res.status(400).json({ error: 'Token do Google não fornecido.' });
   }
-  if (!username || !role) {
-    return res.status(400).json({ error: 'Nome de usuário e role são obrigatórios para novos usuários.' });
-  }
-  if (!['users', 'artists'].includes(role)) {
-    return res.status(400).json({ error: 'Role inválida. Deve ser "user" ou "artist".' });
-  }
+
+  // Para usuários existentes, username e role não são obrigatórios
+  // Apenas para novos usuários que precisamos desses dados
 
   try {
     const ticket = await googleClient.verifyIdToken({
@@ -162,44 +159,108 @@ app.post('/api/auth/google', async (req, res) => {
     const fullName = payload['name'];
     const picture = payload['picture'];
 
-    if (role === 'users') {
-      // Check if user already exists
-      const existing = await pool.query(
+    // PRIMEIRO: Tentar encontrar o usuário em ambas as tabelas
+    let user = null;
+    let userRole = null;
+
+    // Verificar se é artista existente
+    const artistExists = await pool.query(
+      'SELECT * FROM artists WHERE google_id = $1',
+      [google_id]
+    );
+
+    if (artistExists.rows.length > 0) {
+      user = artistExists.rows[0];
+      userRole = 'artists';
+    } else {
+      // Verificar se é usuário existente
+      const userExists = await pool.query(
         'SELECT * FROM users WHERE google_id = $1',
         [google_id]
       );
-      if (existing.rows.length > 0) {
-        return res.json({ user: existing.rows[0], role: 'users', created: false });
+      if (userExists.rows.length > 0) {
+        user = userExists.rows[0];
+        userRole = 'users';
       }
+    }
 
-      // Create new user
+    // Se usuário já existe, criar sessão e retornar
+    if (user) {
+      // Criar sessão
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: user.name,
+        picture_path: user.picture_path,
+        role: userRole === 'artists' ? 'artists' : 'users'
+      };
+
+      req.session.role = userRole;
+
+      console.log('Sessão criada para:', req.session.user);
+
+      return res.json({
+        user: req.session.user,
+        role: userRole,
+        created: false
+      });
+    }
+
+    // SE FOR NOVO USUÁRIO, verificar se os campos obrigatórios foram enviados
+    if (!username || !role) {
+      return res.status(400).json({
+        error: 'Para novos usuários, nome de usuário e role são obrigatórios.'
+      });
+    }
+
+    if (!['users', 'artists'].includes(role)) {
+      return res.status(400).json({ error: 'Role inválida. Deve ser "user" ou "artist".' });
+    }
+
+    // Criar novo usuário baseado na role escolhida
+    let newUser;
+
+    if (role === 'users') {
       const result = await pool.query(
         `INSERT INTO users (google_id, email, name, picture_path, username, status)
          VALUES ($1, $2, $3, $4, $5, 'approved')
          RETURNING *`,
         [google_id, email, fullName, picture, username]
       );
-      return res.status(201).json({ user: result.rows[0], role: 'users', created: true });
+      newUser = result.rows[0];
+      userRole = 'users';
+    } else {
+      // role === 'artists' - artista precisa de aprovação
+      const artistStatus = 'pending'; // Artistas começam como pendentes
+      const result = await pool.query(
+        `INSERT INTO artists (google_id, name, email, username, bio, picture_path, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [google_id, fullName, email, username, bio || null, picture_path || picture || null, artistStatus]
+      );
+      newUser = result.rows[0];
+      userRole = 'artists';
     }
 
-    // role === 'artist'
-    // Check if artist already exists
-    const existing = await pool.query(
-      'SELECT * FROM artists WHERE google_id = $1',
-      [google_id]
-    );
-    if (existing.rows.length > 0) {
-      return res.json({ user: existing.rows[0], role: 'artists', created: false });
-    }
+    // Criar sessão para o novo usuário
+    req.session.user = {
+      id: newUser.id,
+      email: newUser.email,
+      username: newUser.username,
+      picture_path: newUser.picture_path || picture,
+      role: userRole
+    };
 
-    // Create new artist
-    const result = await pool.query(
-      `INSERT INTO artists (google_id, name, email, username, bio, picture_path)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [google_id, fullName, email, username, bio || null, picture_path || picture || null]
-    );
-    return res.status(201).json({ user: result.rows[0], role: 'artists', created: true });
+    req.session.role = userRole;
+
+    console.log('Nova sessão criada para:', req.session.user);
+
+    return res.status(201).json({
+      user: req.session.user,
+      role: userRole,
+      created: true
+    });
 
   } catch (err) {
     console.error('Erro na autenticação Google:', err.message);
@@ -208,7 +269,7 @@ app.post('/api/auth/google', async (req, res) => {
     }
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
-});
+}); 
 
 app.post('/api/auth/signin', async (req, res) => {
   const { email, username, password, name, bio, picture_path, role } = req.body;
@@ -525,7 +586,19 @@ app.patch('/api/admin/artists/:userId/status', async (req, res) => {
   }
 });
 
-// Checkar sessao
+// Rota de logout
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Erro ao destruir sessão:', err);
+      return res.status(500).json({ error: 'Erro ao fazer logout' });
+    }
+    res.clearCookie('connect.sid'); // Limpa o cookie da sessão
+    res.json({ message: 'Logout realizado com sucesso' });
+  });
+});
+
+// Checkar sessão
 app.get('/api/auth/me', (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({
@@ -535,7 +608,7 @@ app.get('/api/auth/me', (req, res) => {
 
   res.json({
     user: req.session.user,
-    role: req.session.role
+    role: req.session.user.role // Usar a role salva na sessão
   });
 });
 

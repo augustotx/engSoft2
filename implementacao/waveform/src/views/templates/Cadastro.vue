@@ -5,7 +5,7 @@ import { GoogleSignInButton, type CredentialResponse } from "vue3-google-signin"
 
 
 
-const is_engsoft = import.meta.env.VITE_IS_ENGSOFT
+const is_engsoft = import.meta.env.VITE_IS_ENGSOFT === 'true'
 console.log(is_engsoft)
 
 const props = defineProps<{

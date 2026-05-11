@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
 import { useRouter } from 'vue-router'
 import { GoogleSignInButton, type CredentialResponse } from "vue3-google-signin"
 import { useNotificationsStore } from '../../stores/notifications'
+import { useAuthStore } from '../../stores/auth'  
 
-
-const is_engsoft = import.meta.env.VITE_IS_ENGSOFT
+const is_engsoft = import.meta.env.VITE_IS_ENGSOFT === 'true'
 
 const props = defineProps<{
   titulo: string
@@ -17,53 +16,58 @@ const props = defineProps<{
 
 const router = useRouter()
 const notificationsStore = useNotificationsStore()
+const authStore = useAuthStore()   
+
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+const manterConectado = ref(false)  
 
-const handleLoginSuccess = (response: CredentialResponse) => {
-  console.log("Access Token", response.credential)
-  router.push(props.redirectTo)
+// Login com Google (usa o store)
+const handleLoginSuccess = async (response: CredentialResponse) => {
+  const { credential } = response
+  if (!credential) {
+    notificationsStore.enviarNotificacao('Token do Google inválido.', 'erro')
+    return
+  }
+
+  loading.value = true
+  try {
+    // O Google Login não precisa de username/role/bio porque o usuário já existe
+    // Se for novo, o backend pedirá esses dados. Mas como é tela de LOGIN,
+    // assumimos que o usuário já está cadastrado. Se não estiver, o backend
+    // retornará erro 400 – você pode tratar redirecionando para cadastro.
+    await authStore.googleLogin(credential)
+    notificationsStore.enviarNotificacao('Login com Google realizado com sucesso!', 'sucesso')
+    router.push(props.redirectTo)
+  } catch (err: any) {
+    const mensagem = err.message || 'Falha na autenticação com o Google.'
+    notificationsStore.enviarNotificacao(mensagem, 'erro')
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleLoginError = () => {
   notificationsStore.enviarNotificacao('Falha ao fazer login. Tente novamente.', 'erro')
 }
 
+// Login com email/senha (usa o store)
 const handleLoginEmail = async () => {
+  if (!email.value || !password.value) {
+    notificationsStore.enviarNotificacao('Preencha e-mail e senha.', 'erro')
+    return
+  }
+
+  loading.value = true
   try {
-    loading.value = true
-    const response = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value,
-        role : props.role
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      const mensagem = `Erro ${response.status}: ${data.error || 'Erro no login'}`
-      notificationsStore.enviarNotificacao(mensagem, 'erro')
-      return
-    }
-
-    notificationsStore.enviarNotificacao(
-      data.message || 'Login realizado com sucesso',
-      'sucesso'
-    )
-
+    await authStore.login(email.value, password.value, props.role)
+    notificationsStore.enviarNotificacao('Login realizado com sucesso!', 'sucesso')
     router.push(props.redirectTo)
-
-  } catch (err) {
-    notificationsStore.enviarNotificacao('Erro ao realizar o login.', 'erro')
-  } 
-  
-  finally {
+  } catch (err: any) {
+    const mensagem = err.message || 'Erro ao realizar o login.'
+    notificationsStore.enviarNotificacao(mensagem, 'erro')
+  } finally {
     loading.value = false
   }
 }
@@ -81,17 +85,20 @@ const handleLoginEmail = async () => {
 
         <h2 class="h4 text-center mb-4">{{ titulo }}</h2>
 
+        <!-- Google Login (modo não-engsoft) -->
         <div v-if="!is_engsoft">
-          <GoogleSignInButton @success="handleLoginSuccess" @error="handleLoginError" />
+          <GoogleSignInButton @success="handleLoginSuccess" @error="handleLoginError" :disabled="loading" />
         </div>
 
-        <form v-else class="w-100" @submit.prevent="handleLoginEmail" @error="handleLoginError">
+        <!-- Login tradicional (modo engsoft) -->
+        <form v-else class="w-100" @submit.prevent="handleLoginEmail">
           <div class="mb-3">
-            <input v-model="email" type="email" class="form-control" placeholder="Email" required />
+            <input v-model="email" type="email" class="form-control" placeholder="Email" required :disabled="loading" />
           </div>
 
           <div class="mb-3">
-            <input v-model="password" type="password" class="form-control" placeholder="Senha" required />
+            <input v-model="password" type="password" class="form-control" placeholder="Senha" required
+              :disabled="loading" />
           </div>
 
           <button class="btn btn-primary w-100" :disabled="loading">
@@ -99,8 +106,9 @@ const handleLoginEmail = async () => {
           </button>
         </form>
 
+        <!-- Checkbox "Manter conectado" (opcional, requer ajuste no backend) -->
         <div class="form-check mt-3">
-          <input class="form-check-input" type="checkbox" id="manterConectado">
+          <input class="form-check-input" type="checkbox" id="manterConectado" v-model="manterConectado" />
           <label class="form-check-label" for="manterConectado">
             Manter-se conectado?
           </label>
