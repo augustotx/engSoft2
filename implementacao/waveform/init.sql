@@ -5,14 +5,14 @@
 -- Tabela de artistas
 CREATE TABLE IF NOT EXISTS artists (
     id SERIAL PRIMARY KEY,
-    google_id   VARCHAR(255),   -- "sub" do token JWT do Google (identificador permanente)
+    google_id   VARCHAR(255),   
     name VARCHAR(255) NOT NULL,
-    email       VARCHAR(255) NOT NULL UNIQUE,   -- e-mail vindo do Google
-    password    VARCHAR(255),                   -- senha do usuario (varchar hihi)
-    username    VARCHAR(100) UNIQUE,            -- nome de usuário escolhido no cadastro
+    email       VARCHAR(255) NOT NULL UNIQUE,   
+    password    VARCHAR(255),                   
+    username    VARCHAR(100) UNIQUE,            
     created_at  TIMESTAMP DEFAULT NOW(),
     bio TEXT,
-    picture_path VARCHAR(500), -- caminho para a imagem do artista (opcional)
+    picture_path VARCHAR(500), 
     status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected'))
 );
 
@@ -22,27 +22,27 @@ CREATE TABLE IF NOT EXISTS albums (
     title VARCHAR(255) NOT NULL,
     release_date DATE,
     artist_id INTEGER NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
-    cover_image_path VARCHAR(500) -- caminho para a imagem da capa (opcional)
+    cover_image_path VARCHAR(500) 
 );
 
 -- Tabela de músicas
 CREATE TABLE IF NOT EXISTS songs (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    file_path VARCHAR(500) NOT NULL, -- caminho para o arquivo de áudio
-    track_number INTEGER, -- número da faixa no álbum
+    file_path VARCHAR(500) NOT NULL, 
+    track_number INTEGER, 
     artist_id INTEGER NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
-    album_id INTEGER NOT NULL REFERENCES albums(id) ON DELETE CASCADE
+    album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE -- 👈 AQUI! Sem o NOT NULL agora.
 );
 
 CREATE TABLE IF NOT EXISTS users (
     id          SERIAL PRIMARY KEY,
-    google_id   VARCHAR(255),   -- "sub" do token JWT do Google (identificador permanente)
-    email       VARCHAR(255) NOT NULL UNIQUE,   -- e-mail vindo do Google
-    name        VARCHAR(255),                   -- nome completo vindo do Google
-    password    VARCHAR(255),                   -- senha do usuario (varchar hihi)
-    picture_path VARCHAR(500),                   -- URL do avatar do Google
-    username    VARCHAR(100) UNIQUE,            -- nome de usuário escolhido no cadastro
+    google_id   VARCHAR(255),   
+    email       VARCHAR(255) NOT NULL UNIQUE,   
+    name        VARCHAR(255),                   
+    password    VARCHAR(255),                   
+    picture_path VARCHAR(500),                   
+    username    VARCHAR(100) UNIQUE,            
     created_at  TIMESTAMP DEFAULT NOW()
 );
 

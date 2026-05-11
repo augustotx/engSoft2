@@ -19,13 +19,17 @@ import ArtistProfile from '@/views/artista/Perfil.vue'
 
 import AssinaturaView from '@/views/ouvinte/AssinaturaView.vue'
 
+// 👇 Importando as novas telas do Artista
+import StreamsView from "@/views/artista/Streams.vue"
+import UploadView from "@/views/artista/Upload.vue"
+
 const routes = [
     { path: "/", component: LandingPage },
     { path: "/ouvinte/login", component: LoginOuvinte },
     { path: "/ouvinte/cadastro", component: RegisterListener },
     { path: "/artista/login", component: LoginArtist },
     { path: "/artista/cadastro", component: RegisterArtist },
-    { path: "/admin/artistas", component: AdminArtistas},
+    { path: "/admin/artistas", component: AdminArtistas }, 
     {
         path: "/", component: MainLayout,
         children: [
@@ -34,19 +38,15 @@ const routes = [
             { path: "/playlists/:id", component: PlaylistView, meta: { requiresAuth: true } },
             { path: "/albuns/:id", component: AlbumView, meta: { requiresAuth: true } },
             { path: '/assinatura', component: AssinaturaView },
+            
+            // 👇 Perfis movidos para cá para terem a NavBar!
+            { path: '/ouvinte/perfil', name: 'Profile', component: ProfilePage, meta: { requiresAuth: true, role: 'users' } },
+            { path: '/artista/perfil', name: 'ArtistProfile', component: ArtistProfile, meta: { requiresAuth: true, role: 'artists' } },
+
+            // 👇 Novas rotas do Artista
+            { path: "/artista/streams", component: StreamsView, meta: { requiresAuth: true, role: 'artists' } },
+            { path: "/artista/upload", component: UploadView, meta: { requiresAuth: true, role: 'artists' } },
         ]
-    },
-    {
-        path: '/ouvinte/perfil',
-        name: 'Profile',
-        component: ProfilePage,
-        meta: { requiresAuth: true, role: 'users' }
-    },
-    {
-        path: '/artista/perfil',
-        name: 'ArtistProfile',
-        component: ArtistProfile,
-        meta: { requiresAuth: true, role: 'artists' }
     }
 ]
 
@@ -55,25 +55,20 @@ const router = createRouter({
     routes
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
     const authStore = useAuthStore()
 
-    // Se a sessão ainda não foi verificada, verifica antes de prosseguir
     if (authStore.loading) {
         await authStore.checkSession()
     }
 
-    // Rota requer autenticação e usuário não está logado
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        return next('/')
+        return '/' // Chuta pra landing page se não tiver logado
     }
 
-    // Rota requer uma role específica e usuário tem role diferente
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
-        return next('/')
+        return '/' // Chuta pra landing page se a role for errada
     }
-
-    next()
 })
 
 export default router
