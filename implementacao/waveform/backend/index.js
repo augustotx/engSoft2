@@ -360,7 +360,7 @@ app.post('/api/auth/login', async (req, res) => {
 
   try {
     const sql = `
-      SELECT id, email, username, name, password, picture_path
+      SELECT id, email, username, name, password, picture_path, is_premium
       FROM ${role}
       WHERE email = $1
     `;
@@ -385,7 +385,8 @@ app.post('/api/auth/login', async (req, res) => {
       id: user.id,
       email: user.email,
       username: user.username,
-      role
+      role,
+      is_premium: user.is_premium ?? false
     };
 
     console.log('SESSION:', req.session.user);
@@ -403,6 +404,105 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// ---------------------------------ASSINATURA----------------------------------
+// Assinar plano premium
+app.post('/api/subscription/subscribe', async (req, res) => {
+  const { user_id } = req.body
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id é obrigatório' })
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE users SET is_premium = TRUE WHERE id = $1 RETURNING id, username, is_premium',
+      [user_id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    // Atualiza a sessão também
+    if (req.session.user) {
+      req.session.user.is_premium = true
+    }
+
+    res.status(200).json({
+      message: 'Assinatura realizada com sucesso!',
+      user: result.rows[0]
+    })
+  } catch (err) {
+    console.error('Erro ao assinar:', err)
+    res.status(500).json({ error: 'Erro interno ao processar assinatura' })
+  }
+})
+
+// Cancelar assinatura
+app.post('/api/subscription/cancel', async (req, res) => {
+  const { user_id } = req.body
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id é obrigatório' })
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE users SET is_premium = FALSE WHERE id = $1 RETURNING id, username, is_premium',
+      [user_id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    // Atualiza a sessão também
+    if (req.session.user) {
+      req.session.user.is_premium = false
+    }
+
+    res.status(200).json({
+      message: 'Assinatura cancelada.',
+      user: result.rows[0]
+    })
+  } catch (err) {
+    console.error('Erro ao cancelar:', err)
+    res.status(500).json({ error: 'Erro interno ao cancelar assinatura' })
+  }
+})
+
+const path = require('path')
+const fs = require('fs')
+
+app.get('/api/songs/:id/download', async (req, res) => {
+  const { id } = req.params
+
+  try {
+    const result = await pool.query('SELECT title, file_path FROM songs WHERE id = $1', [id])
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Música não encontrada' })
+    }
+
+    const song = result.rows[0]
+    const filePath = path.join(__dirname, song.file_path)
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Arquivo não encontrado' })
+    }
+
+    // Esse header é o que força o download em vez de abrir no navegador
+    res.setHeader('Content-Disposition', `attachment; filename="${song.title}.mp3"`)
+    res.setHeader('Content-Type', 'audio/mpeg')
+    res.sendFile(filePath)
+
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Erro ao baixar música' })
+  }
+})
+
+//----------------------------------------------------------------------------------
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
 });
@@ -842,3 +942,5 @@ app.put('/api/artists/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro interno ao atualizar perfil.' });
   }
 });
+
+

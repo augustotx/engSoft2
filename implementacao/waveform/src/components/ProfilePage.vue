@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="container mt-4">
     <div class="row justify-content-center">
@@ -24,6 +26,18 @@
               <span class="badge" :class="statusBadgeClass">
                 Status: {{ statusText }}
               </span>
+            </div>
+
+            <!-- Bloco de assinatura (só para ouvintes) -->
+            <div v-if="!isArtist" class="mb-4 p-3 rounded border text-center">
+                <p class="mb-1 fw-bold">Plano atual: 
+                    <span :class="authStore.isPremium ? 'text-success' : 'text-secondary'">
+                        {{ authStore.isPremium ? '⭐ Premium' : 'Gratuito' }}
+                    </span>
+                </p>
+                <button class="btn btn-sm btn-primary mt-2" @click="router.push('/assinatura')">
+                    {{ authStore.isPremium ? 'Gerenciar assinatura' : 'Assinar Premium' }}
+                </button>
             </div>
 
             <form @submit.prevent="updateProfile">
@@ -82,6 +96,11 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const props = defineProps({
   userId: {

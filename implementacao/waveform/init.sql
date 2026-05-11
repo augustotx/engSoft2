@@ -89,3 +89,7 @@ CREATE TABLE IF NOT EXISTS streams (
 
 CREATE INDEX IF NOT EXISTS idx_streams_song_id   ON streams(song_id);
 CREATE INDEX IF NOT EXISTS idx_streams_played_at ON streams(song_id, played_at);
+
+-- Adição da opção de premium no usuario
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE;

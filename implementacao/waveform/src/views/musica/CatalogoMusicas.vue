@@ -103,7 +103,13 @@ function handlePlay(song) {
   }
 }
 
-function download(song) { window.open(`${STATIC_BASE}/${song.file_path}`, '_blank') }
+function download(song) {
+  if (!authStore.isPremium) {
+    router.push('/assinatura')
+    return
+  }
+  window.open(`${API_BASE}/songs/${song.id}/download`, '_blank')
+}
 
 const audiosFiltrados = computed(() => {
   return songs.value.filter(song => song.title.toLowerCase().includes(searchText.value.toLowerCase()))
@@ -142,8 +148,11 @@ onMounted(() => {
           <small class="text-muted">Faixa {{ song.track_number }}</small>
         </div>
         <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-outline-secondary" @click="download(song)"><i
-              class="fa-solid fa-download"></i></button>
+
+         <button class="btn btn-sm":class="authStore.isPremium ? 'btn-outline-secondary' : 'btn-outline-warning'"@click="download(song)":title="authStore.isPremium ? 'Baixar' : 'Exclusivo Premium'">
+            <i class="fa-solid" :class="authStore.isPremium ? 'fa-download' : 'fa-lock'"></i>
+        </button>
+
           <button class="btn btn-sm btn-outline-secondary" @click="abrirModalPlaylist(song)"><i
               class="fa-solid fa-plus"></i></button>
           <button class="btn btn-primary btn-sm" @click="handlePlay(song)">

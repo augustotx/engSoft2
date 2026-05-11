@@ -17,6 +17,8 @@ import AdminArtistas from "@/views/admin/AdminArtistas.vue"
 import ProfilePage from '@/views/ouvinte/Perfil.vue'
 import ArtistProfile from '@/views/artista/Perfil.vue'
 
+import AssinaturaView from '@/views/ouvinte/AssinaturaView.vue'
+
 const routes = [
     { path: "/", component: LandingPage },
     { path: "/ouvinte/login", component: LoginOuvinte },
@@ -31,6 +33,7 @@ const routes = [
             { path: "/playlists", component: Playlists, meta: { requiresAuth: true, role: 'users' } },
             { path: "/playlists/:id", component: PlaylistView, meta: { requiresAuth: true } },
             { path: "/albuns/:id", component: AlbumView, meta: { requiresAuth: true } },
+            { path: '/assinatura', component: AssinaturaView },
         ]
     },
     {

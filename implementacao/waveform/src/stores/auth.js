@@ -4,7 +4,8 @@ import { defineStore } from 'pinia'
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,     // { id, email, username, name, picture_path, role }
-        loading: true
+        loading: true,
+        isPremium: false
     }),
 
     getters: {
@@ -23,12 +24,15 @@ export const useAuthStore = defineStore('auth', {
                 if (response.ok) {
                     const data = await response.json()
                     this.user = data.user   // data.user já contém o campo 'role'
+                    this.isPremium = data.user.is_premium ?? false
                 } else {
                     this.user = null
+                    this.isPremium = false
                 }
             } catch (err) {
                 console.error('Erro ao verificar sessão:', err)
                 this.user = null
+                this.isPremium = false
             } finally {
                 this.loading = false
             }
@@ -48,6 +52,7 @@ export const useAuthStore = defineStore('auth', {
             }
             const data = await response.json()
             this.user = data.user
+            this.isPremium = data.user.is_premium ?? false
             return data
         },
 
@@ -71,6 +76,7 @@ export const useAuthStore = defineStore('auth', {
             }
             const data = await response.json()
             this.user = data.user
+            this.isPremium = data.user.is_premium ?? false
             return data
         },
 
@@ -82,6 +88,7 @@ export const useAuthStore = defineStore('auth', {
             })
             if (response.ok) {
                 this.user = null
+                this.isPremium = false
             } else {
                 console.error('Erro no logout')
             }
