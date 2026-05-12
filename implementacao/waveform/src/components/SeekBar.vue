@@ -45,7 +45,7 @@
             style="width: 32px; height: 32px; padding: 0;"
             @click="togglePlay"
           >
-	  <i class="fa-solid" :class="isPlaying ? 'fa-pause' : 'fa-play'"></i>
+    <i class="fa-solid" :class="isPlaying ? 'fa-pause' : 'fa-play'"></i>
           </button>
         </div>
 
@@ -67,7 +67,7 @@
 
             <!-- Volume -->
             <div class="d-none d-md-flex align-items-center gap-1 ms-2">
-		    <span class="small d-flex align-items-center" style="line-height: 1;"><i class="fa-solid" :class="getVolumeIcon()"></i></span>
+        <span class="small d-flex align-items-center" style="line-height: 1;"><i class="fa-solid" :class="getVolumeIcon()"></i></span>
               <input
                 type="range"
                 class="form-range volume-range"
@@ -94,33 +94,18 @@
     ></audio>
   </div>
 </template>
-<script setup>
-// Esse é o script da SeekBar, que é um componente fixo na parte inferior da tela para controlar a reprodução de áudio.
 
-// Vcs vão perceber que tem algumas variáveis não utilizadas. Eu deixei elas pra compatiblidade, mas não sei se é necessário. Dps a gente testa
-// ~augusto
+<script setup>
 import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
 import { usePlayerStore } from '../stores/player'
 
 const playerStore = usePlayerStore()
-const API_BASE = 'http://localhost:3000/api'
-
-async function registrarStream(songId) {
-  if (!songId) return
-  try {
-    await fetch(`${API_BASE}/songs/${songId}/stream`, { method: 'POST' })
-  } catch (err) {
-    console.error('Erro ao registrar stream:', err)
-  }
-}
 
 const props = defineProps({
-  // Arquivo dado pelo usuário (e.g., via input type="file")
   audioFile: {
     type: File,
     default: null
   },
-  // URL remoto para o áudio
   audioSrc: {
     type: String,
     default: ''
@@ -163,7 +148,6 @@ let currentFetchController = null
 // --------------------------------------------------------------
 //                     MARQUEE (SCROLLING TEXT)
 // --------------------------------------------------------------
-// Refs for overflow detection
 const titleContainer = ref(null)
 const artistContainer = ref(null)
 const titleMeasure = ref(null)
@@ -173,15 +157,12 @@ const artistOverflow = ref(false)
 const titleDuration = ref(10)
 const artistDuration = ref(10)
 
-// Function to check overflow and set durations
 function checkOverflow() {
   if (titleMeasure.value && titleContainer.value) {
     const textWidth = titleMeasure.value.offsetWidth
     const containerWidth = titleContainer.value.clientWidth
     titleOverflow.value = textWidth > containerWidth
-    console.log('Title overflow:', titleOverflow.value, textWidth, containerWidth);
     if (titleOverflow.value) {
-      // Duration proportional to how many times the text is wider (base 5s + extra)
       const ratio = textWidth / containerWidth
       titleDuration.value = Math.max(5, Math.round(ratio * 4))
     }
@@ -197,7 +178,6 @@ function checkOverflow() {
   }
 }
 
-// Use ResizeObserver to detect container size changes
 let resizeObserver
 onMounted(() => {
   checkOverflow()
@@ -212,7 +192,6 @@ onBeforeUnmount(() => {
   if (resizeObserver) resizeObserver.disconnect()
 })
 
-// Re-check when the text changes (e.g., new song loaded)
 watch([trackTitle, trackArtist], () => {
   nextTick(() => {
     checkOverflow()
@@ -220,7 +199,6 @@ watch([trackTitle, trackArtist], () => {
 })
 // --------------------------------------------------------------
 
-// Formata tempo em segundos para mm:ss
 const formatTime = (seconds) => {
   if (isNaN(seconds) || seconds === 0) return '0:00'
   const mins = Math.floor(seconds / 60)
@@ -228,7 +206,6 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-// Analisa metadados de um Blob (arquivo ou resposta fetch)
 async function parseMetadataFromBlob(blob) {
   try {
     const mm = await import('https://cdn.jsdelivr.net/npm/music-metadata@10.8.2/+esm')
@@ -246,26 +223,20 @@ async function parseMetadataFromBlob(blob) {
       coverArt.value = null
     }
 
-    // Opcionalmente, podemos usar a duração do metadata se disponível,
-    // mas o elemento <audio> também vai fornecer isso
     if (format.duration) {
       duration.value = format.duration
     }
   } catch (err) {
     console.error('Metadata parsing failed:', err)
-    // Keep existing or empty metadata
   }
 }
 
-// Carregar a partir de um arquivo local
 async function loadFromFile(file) {
-  // Revocar URL antigo
   if (audioObjectUrl.value) {
     URL.revokeObjectURL(audioObjectUrl.value)
     audioObjectUrl.value = ''
   }
 
-  // Resetar metadados
   coverArt.value = null
   trackTitle.value = ''
   trackArtist.value = ''
@@ -278,26 +249,20 @@ async function loadFromFile(file) {
     audioObjectUrl.value = URL.createObjectURL(file)
   } catch (err) {
     console.error('Failed to process file:', err)
-    // Fallback: ainda tentamos criar o URL mesmo sem metadados,
-    // para permitir reprodução
     audioObjectUrl.value = URL.createObjectURL(file)
   }
 }
 
-// Carregar a partir de uma URL remota
 async function loadFromUrl(url) {
-  // Abort any ongoing fetch
   if (currentFetchController) {
     currentFetchController.abort()
   }
 
-  // Revocar URL antigo
   if (audioObjectUrl.value) {
     URL.revokeObjectURL(audioObjectUrl.value)
     audioObjectUrl.value = ''
   }
 
-  // Resetar metadados
   coverArt.value = null
   trackTitle.value = ''
   trackArtist.value = ''
@@ -313,22 +278,17 @@ async function loadFromUrl(url) {
 
     await parseMetadataFromBlob(blob)
 
-    // Criar URL para o elemento <audio>
     audioObjectUrl.value = URL.createObjectURL(blob)
 
-    // Aguardar próximo tick para garantir que o src foi atualizado no DOM
     await nextTick()
 
-    // Forçar carregamento da nova fonte
     audioRef.value.load()
 
-    // Remover listeners antigos (se houver) e adicionar um para 'canplay'
     const audio = audioRef.value
     const onCanPlay = () => {
       audio.play().catch(err => console.error('Playback failed:', err))
       isPlaying.value = true
       audio.removeEventListener('canplay', onCanPlay)
-      registrarStream(playerStore.currentSongId)
     }
     audio.addEventListener('canplay', onCanPlay)
 
@@ -343,25 +303,20 @@ async function loadFromUrl(url) {
   }
 }
 
-// Esperando mudanças nas props para carregar o áudio
 watch(() => props.audioFile, (newFile) => {
   if (newFile) {
     loadFromFile(newFile)
   } else if (props.audioSrc) {
-    // Se o arquivo for nulo, mas a URL estiver presente, tenta carregar da URL
     loadFromUrl(props.audioSrc)
   }
 }, { immediate: true })
 
 watch(() => props.audioSrc, (newUrl, oldUrl) => {
-  console.log('audioSrc changed:', newUrl, oldUrl)
   if (!props.audioFile && newUrl) {
-    console.log('calling loadFromUrl')
     loadFromUrl(newUrl)
   }
 })
 
-// play/pause
 const togglePlay = () => {
   const audio = audioRef.value
   if (!audio) return
@@ -374,7 +329,6 @@ const togglePlay = () => {
   isPlaying.value = !isPlaying.value
 }
 
-// Atualizar tempo atual e barra de progresso
 const onTimeUpdate = () => {
   const audio = audioRef.value
   if (audio) {
@@ -385,7 +339,6 @@ const onTimeUpdate = () => {
   }
 }
 
-// Carregar metadados e duração quando o áudio estiver pronto
 const onLoadedMetadata = () => {
   const audio = audioRef.value
   if (audio) {
@@ -393,7 +346,6 @@ const onLoadedMetadata = () => {
   }
 }
 
-// Quando a música termina, resetar estado
 const onEnded = () => {
   isPlaying.value = false
   currentTime.value = 0
@@ -404,7 +356,6 @@ const onEnded = () => {
   }
 }
 
-// Seeking
 let seekDragging = false
 
 const handleSeek = () => {
@@ -420,7 +371,6 @@ const handleSeekEnd = () => {
   seekDragging = false
 }
 
-// Volume
 const updateVolume = () => {
   const audio = audioRef.value
   if (audio) {
@@ -428,14 +378,12 @@ const updateVolume = () => {
   }
 }
 
-// Ícone de volume baseado no nível
 const getVolumeIcon = () => {
   if (volume.value == 0) return 'fa-volume-xmark'
   if (volume.value < 0.65) return 'fa-volume-low'
   return 'fa-volume-high'
 }
 
-// Limpar recursos quando o componente for destruído
 onBeforeUnmount(() => {
   const audio = audioRef.value
   if (audio) {

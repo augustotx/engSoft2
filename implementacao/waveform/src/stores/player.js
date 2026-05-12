@@ -2,11 +2,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const usePlayerStore = defineStore('player', () => {
-
   const currentSongUrl = ref('')
   const currentSongId = ref(null)
   const isPlaying = ref(false)
-  
   const queue = ref([])
   const currentIndex = ref(0)
 
@@ -24,7 +22,6 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   function playNext() {
-
     if (queue.value.length > 0 && currentIndex.value < queue.value.length - 1) {
       currentIndex.value++ 
       const nextSong = queue.value[currentIndex.value]
@@ -45,6 +42,15 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
+  // 👇 NOVA FUNÇÃO PARA ZERAR TUDO NO LOGOUT
+  function resetPlayer() {
+    currentSongUrl.value = ''
+    currentSongId.value = null
+    isPlaying.value = false
+    queue.value = []
+    currentIndex.value = 0
+  }
+
   return { 
     currentSongUrl, 
     currentSongId, 
@@ -54,6 +60,7 @@ export const usePlayerStore = defineStore('player', () => {
     setSongUrl, 
     setSongId,
     setQueue,
-    playNext
+    playNext,
+    resetPlayer 
   }
 })

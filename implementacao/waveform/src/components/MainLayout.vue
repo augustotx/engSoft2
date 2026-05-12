@@ -10,6 +10,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 async function logout() {
+  playerStore.resetPlayer() 
   await authStore.logout()
   router.push('/')
 }
