@@ -49,7 +49,8 @@
                   <i class="fa-solid fa-minus"></i>
                 </button>
                 
-                <button class="btn btn-sm btn-primary" @click="tocarMusica(song)">
+                <!-- AQUI: Passando o index para a função tocarMusica -->
+                <button class="btn btn-sm btn-primary" @click="tocarMusica(song, index)">
                    <i class="fa-solid" :class="playerStore.currentSongUrl?.includes(song.file_path) && playerStore.isPlaying ? 'fa-pause' : 'fa-play'"></i>
                 </button>
               </div>
@@ -70,7 +71,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationsStore } from '../../stores/notifications'
 import { usePlayerStore } from '@/stores/player'
-import draggable from 'vuedraggable' // 👈 Importação do Draggable
+import draggable from 'vuedraggable' 
 
 const route = useRoute()
 const router = useRouter()
@@ -97,7 +98,6 @@ async function fetchPlaylistDetails() {
   }
 }
 
-// 👈 Nova função para avisar o Back-end da nova ordem
 async function salvarNovaOrdem() {
   const novaOrdemIds = playlist.value.songs.map(song => song.id);
 
@@ -112,9 +112,22 @@ async function salvarNovaOrdem() {
   }
 }
 
-function tocarMusica(song) {
+// 👇 NOVA FUNÇÃO: Dispara a rota de registrar stream no banco
+async function registrarStream(songId) {
+  try {
+    await fetch(`${API_BASE}/songs/${songId}/stream`, { method: 'POST' })
+  } catch (error) {
+    console.error("Erro ao registrar stream:", error)
+  }
+}
+
+// 👇 ATUALIZADO: Recebe o index e avisa a fila e o banco de dados
+function tocarMusica(song, index) {
   const songUrl = `${STATIC_BASE}/${song.file_path}`
   const audioFisico = document.querySelector('audio')
+  
+  // Salva a lista de músicas para a próxima tocar sozinha
+  playerStore.setQueue(playlist.value.songs, index)
   
   if (playerStore.currentSongUrl === songUrl) {
     if (playerStore.isPlaying) {
@@ -125,6 +138,9 @@ function tocarMusica(song) {
       playerStore.isPlaying = true
     }
   } else {
+    // Registra a stream por ser uma música nova!
+    registrarStream(song.id)
+    if (playerStore.setSongId) playerStore.setSongId(song.id)
     playerStore.setSongUrl(songUrl)
     playerStore.isPlaying = true
   }
@@ -176,7 +192,6 @@ onMounted(fetchPlaylistDetails)
   color: var(--base) !important; 
 }
 
-/* Cursor especial para o ícone de arrastar */
 .drag-handle {
   cursor: grab;
   transition: color 0.2s;

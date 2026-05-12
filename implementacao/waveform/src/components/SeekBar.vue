@@ -398,6 +398,10 @@ const onEnded = () => {
   isPlaying.value = false
   currentTime.value = 0
   seekValue.value = 0
+  
+  if (playerStore.playNext) {
+    playerStore.playNext()
+  }
 }
 
 // Seeking

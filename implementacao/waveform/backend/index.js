@@ -931,3 +931,23 @@ app.get('/api/artists/:id/pagamento', async (req, res) => {
 app.listen(port, () => {
   console.log(`Backend running at http://localhost:${port}`);
 });
+
+// Buscar todas as músicas de um artista com a contagem de streams
+app.get('/api/artists/:id/songs-streams', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT s.id, s.title, COUNT(st.id)::int AS stream_count
+      FROM songs s
+      LEFT JOIN streams st ON s.id = st.song_id
+      WHERE s.artist_id = $1
+      GROUP BY s.id, s.title
+      ORDER BY stream_count DESC, s.title ASC
+    `, [id]);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar dados de streams por música.' });
+  }
+});

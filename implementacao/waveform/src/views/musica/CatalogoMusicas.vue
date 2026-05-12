@@ -22,11 +22,6 @@ const userId = computed(() => authStore.user?.id)
 const playerStore = usePlayerStore()
 const notificationsStore = useNotificationsStore()
 
-const profileRoute = computed(() => {
-  if (!authStore.user) return null
-  return authStore.user.role === 'users' ? '/ouvinte/perfil' : '/artista/perfil'
-})
-
 async function fetchSongs() {
   loading.value = true
   try {
@@ -81,6 +76,8 @@ async function adicionarAFila(songPlaylistId) {
         if (!playlistAfetada.songs) playlistAfetada.songs = []
         playlistAfetada.songs.push({ id: selectedSong.value.id })
       }
+      notificationsStore.enviarNotificacao('Música adicionada à playlist!', 'sucesso')
+      showPlaylistModal.value = false
     } else {
       notificationsStore.enviarNotificacao('Erro ao adicionar', 'erro')
     }
@@ -89,13 +86,35 @@ async function adicionarAFila(songPlaylistId) {
   }
 }
 
-function handlePlay(song) {
+// NOVA FUNÇÃO: Dispara a rota de registrar stream no banco
+async function registrarStream(songId) {
+  try {
+    await fetch(`${API_BASE}/songs/${songId}/stream`, { method: 'POST' })
+  } catch (error) {
+    console.error("Erro ao registrar stream:", error)
+  }
+}
+
+// ATUALIZADO: Recebe o index e avisa a fila de reprodução e o banco de dados
+function handlePlay(song, index) {
   const songUrl = `${STATIC_BASE}/${song.file_path}`
   const audio = document.querySelector('audio')
+  
+  // Salva a lista filtrada atual na store para o auto-play funcionar corretamente
+  playerStore.setQueue(audiosFiltrados.value, index)
+
   if (playerStore.currentSongUrl === songUrl) {
-    playerStore.isPlaying ? audio.pause() : audio.play()
-    playerStore.isPlaying = !playerStore.isPlaying
+    // Se for a mesma música, só pausa ou continua
+    if (playerStore.isPlaying) {
+      audio.pause()
+      playerStore.isPlaying = false
+    } else {
+      audio.play()
+      playerStore.isPlaying = true
+    }
   } else {
+    // Se for uma música nova, registra o stream e toca!
+    registrarStream(song.id)
     playerStore.setSongId(song.id)
     playerStore.setSongUrl(songUrl)
     playerStore.isPlaying = true
@@ -121,16 +140,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container mt-4">
+  <div class="container mt-4 pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="mb-0">Catálogo de Músicas</h1>
-      <button v-if="authStore.user && profileRoute" class="btn btn-outline-primary" @click="router.push(profileRoute)">
-        <i class="fa-regular fa-user me-1"></i> Meu Perfil
-      </button>
+      <h1 class="mb-0 text-primary fw-bold">Catálogo de Músicas</h1>
     </div>
 
     <div class="mb-4">
-      <input type="text" class="form-control" v-model="searchText" placeholder="Buscar músicas..." />
+      <input type="text" class="form-control form-control-lg border-0 shadow-sm" v-model="searchText" placeholder="Buscar músicas..." />
     </div>
 
     <div v-if="loading" class="text-center my-5">
@@ -138,21 +154,25 @@ onMounted(() => {
     </div>
 
     <div v-else>
-      <div v-for="song in audiosFiltrados" :key="song.id"
-        class="card p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
+      <div v-for="(song, index) in audiosFiltrados" :key="song.id"
+        class="card p-3 mb-3 d-flex flex-row justify-content-between align-items-center shadow-sm">
         <div>
-          <div class="fw-bold text-primary text-uppercase">{{ song.title }}</div>
-          <small class="text-muted">Faixa {{ song.track_number }}</small>
+          <div class="fw-bold fs-5" :class="playerStore.currentSongUrl?.includes(song.file_path) ? 'text-primary' : 'text-dark'">
+            {{ song.title }}
+          </div>
+          <small class="text-muted">Faixa {{ song.track_number || 'Single' }}</small>
         </div>
         <div class="d-flex gap-2">
 
-         <button class="btn btn-sm":class="authStore.isPremium ? 'btn-outline-secondary' : 'btn-outline-warning'"@click="download(song)":title="authStore.isPremium ? 'Baixar' : 'Exclusivo Premium'">
+         <button class="btn btn-sm" :class="authStore.isPremium ? 'btn-outline-secondary' : 'btn-outline-warning'" @click="download(song)" :title="authStore.isPremium ? 'Baixar' : 'Exclusivo Premium'">
             <i class="fa-solid" :class="authStore.isPremium ? 'fa-download' : 'fa-lock'"></i>
         </button>
 
-          <button class="btn btn-sm btn-outline-secondary" @click="abrirModalPlaylist(song)"><i
-              class="fa-solid fa-plus"></i></button>
-          <button class="btn btn-primary btn-sm" @click="handlePlay(song)">
+          <button class="btn btn-sm btn-outline-secondary" @click="abrirModalPlaylist(song)" title="Adicionar à Playlist">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          
+          <button class="btn btn-primary btn-sm px-3" @click="handlePlay(song, index)">
             <i class="fa-solid"
               :class="playerStore.currentSongUrl?.includes(song.file_path) && playerStore.isPlaying ? 'fa-pause' : 'fa-play'"></i>
           </button>
@@ -160,7 +180,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-if="showPlaylistModal" class="modal-overlay">
+    <div v-if="showPlaylistModal" class="modal-overlay" @click.self="showPlaylistModal = false">
       <div class="modal-content card p-4 shadow-lg border-primary">
         <h5 class="text-center text-primary mb-3">Adicionar à Playlist</h5>
         <div class="modal-body custom-scroll">
@@ -171,20 +191,23 @@ onMounted(() => {
             </button>
           </div>
           <div v-if="playlistsParaAdicionar.length === 0" class="text-center py-4 text-muted">
-            Sem playlists disponíveis.
+            Música já adicionada em todas as suas playlists.
           </div>
         </div>
-        <button class="btn btn-secondary w-100 mt-3" @click="showPlaylistModal = false">Pronto</button>
+        <button class="btn btn-secondary w-100 mt-3" @click="showPlaylistModal = false">Fechar</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.card { background-color: var(--surface1) !important; color: var(--text); border: none; }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1050; }
-.modal-content { width: 90%; max-width: 380px; background-color: var(--surface1) !important; border: 1px solid var(--primary); }
-.playlist-btn { background-color: var(--surface2) !important; color: var(--text) !important; border: 1px solid var(--border) !important; padding: 12px; font-weight: bold; transition: all 0.2s ease; }
-.playlist-btn:hover { background-color: var(--primary) !important; color: white !important; transform: translateY(-2px); }
+.card { background-color: var(--surface1) !important; color: var(--text); border: none; transition: transform 0.2s;}
+.card:hover { transform: translateY(-2px); }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1050; backdrop-filter: blur(3px); }
+.modal-content { width: 90%; max-width: 400px; background-color: var(--surface1) !important; border: none; border-radius: 12px; }
+.playlist-btn { background-color: var(--surface2) !important; color: var(--text) !important; border: 1px solid var(--border) !important; padding: 12px; font-weight: bold; transition: all 0.2s ease; border-radius: 8px;}
+.playlist-btn:hover { background-color: var(--primary) !important; color: white !important; transform: scale(1.02); }
 .custom-scroll { max-height: 300px; overflow-y: auto; padding-right: 5px; }
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 </style>
